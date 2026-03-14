@@ -1,0 +1,5 @@
+podman run -it --rm --device=/dev/fuse \
+  -v $XDG_RUNTIME_DIR/containers/auth.json:/run/user/0/containers/auth.json:Z \
+  -v /home/lab-user/LightspeedBYOKDemo:/markdown:Z \
+  -v /home/lab-user/LightspeedBYOKOutput:/output:Z \
+registry.redhat.io/openshift-lightspeed-tech-preview/lightspeed-rag-tool-rhel9:latest
