@@ -2,6 +2,8 @@
 
 > **Watch the full demo recording:** [OpenShift Lightspeed BYOK Demo on YouTube](https://youtu.be/6qsPPp7Pn0s?si=KRB_nXoi2w8ijXCq)
 
+![Make OpenShift Lightspeed Speak Your Language](lightspeed-byok-hero.png)
+
 This repository contains everything needed to demonstrate how to augment [OpenShift Lightspeed](https://www.redhat.com/en/technologies/cloud-computing/openshift/lightspeed) with your organization's private documentation using Retrieval-Augmented Generation (RAG). By ingesting custom Markdown files, Lightspeed can answer questions grounded in your internal standards, policies, and runbooks instead of relying solely on public knowledge.
 
 The demo uses a fictional **Bowland Widget Factory** and its OpenShift platform standards as the sample knowledge base.
