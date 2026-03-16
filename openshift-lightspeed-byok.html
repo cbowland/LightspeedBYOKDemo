@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bring Your Own Knowledge to OpenShift Lightspeed</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700;900&family=Red+Hat+Text:wght@400;500;700&family=Red+Hat+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #000000;
+      --bg-secondary: #1f1f1f;
+      --bg-surface: #292929;
+      --text-primary: #ffffff;
+      --text-secondary: #c7c7c7;
+      --text-muted: #a3a3a3;
+      --accent: #ee0000;
+      --accent-dark: #a60000;
+      --accent-light: #f56e6e;
+      --tag-border: #383838;
+      --icon-filter: brightness(0) invert(1);
+      --icon-filter-accent: invert(12%) sepia(100%) saturate(10000%) hue-rotate(0deg) brightness(95%);
+      --font-display: 'Red Hat Display', sans-serif;
+      --font-body: 'Red Hat Text', sans-serif;
+      --font-mono: 'Red Hat Mono', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      overflow: hidden;
+    }
+
+    .rh-logo { height: 28px; width: auto; }
+    .rh-logo.small { height: 20px; }
+    .rh-logo.large { height: 40px; }
+
+    .rh-icon { height: 48px; width: 48px; filter: var(--icon-filter); vertical-align: middle; }
+    .rh-icon.small { height: 24px; width: 24px; }
+    .rh-icon.medium { height: 48px; width: 48px; }
+    .rh-icon.large { height: 64px; width: 64px; }
+    .rh-icon.xl { height: 96px; width: 96px; }
+    .rh-icon.accent { filter: var(--icon-filter-accent); }
+
+    .deck { width: 100vw; height: 100vh; position: relative; }
+
+    .slide {
+      width: 100vw;
+      height: 100vh;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px 100px;
+      position: relative;
+      overflow: hidden;
+    }
+    .slide.active { display: flex; }
+
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      right: -10%;
+      width: 60%;
+      height: 60%;
+      background: radial-gradient(ellipse, rgba(238,0,0,0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .slide > * { position: relative; z-index: 1; }
+
+    .slide:nth-child(even)::before {
+      top: auto;
+      bottom: -20%;
+      right: auto;
+      left: -10%;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .slide-label {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 3.5rem;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 2.4rem;
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+
+    h3 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.4rem;
+      line-height: 1.3;
+      margin-bottom: 12px;
+      color: var(--text-secondary);
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 700px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .accent { color: var(--accent); }
+    .accent-italic { color: var(--accent); font-style: italic; }
+
+    .tag {
+      display: inline-block;
+      padding: 6px 16px;
+      border: 1px solid var(--tag-border);
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+    .tag.accent { border-color: var(--accent); color: var(--accent); }
+
+    .attribution {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: auto;
+      padding-top: 32px;
+    }
+
+    .source {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: auto;
+      padding-top: 24px;
+      opacity: 0.7;
+    }
+
+    .big-number {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 6rem;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .stat-context {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      margin-top: 24px;
+    }
+
+    .col {
+      padding: 28px;
+      border-radius: 12px;
+      background: rgba(41,41,41,0.5);
+      border: 1px solid var(--tag-border);
+    }
+    .col.highlight {
+      border-color: var(--accent);
+      background: rgba(238,0,0,0.04);
+    }
+
+    .col h3 { margin-bottom: 16px; }
+    .col ul {
+      list-style: none;
+      padding: 0;
+    }
+    .col ul li {
+      padding: 8px 0;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      border-bottom: 1px solid rgba(56,56,56,0.5);
+    }
+    .col ul li:last-child { border-bottom: none; }
+
+    .step-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px;
+      margin-top: 32px;
+    }
+
+    .step-card {
+      padding: 32px 24px;
+      border-radius: 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--tag-border);
+      text-align: center;
+    }
+
+    .step-number {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 2.4rem;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .step-card h3 {
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      font-size: 1.2rem;
+    }
+
+    .step-card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .code-block {
+      background: var(--bg-secondary);
+      border: 1px solid var(--tag-border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      margin-top: 16px;
+      white-space: pre;
+    }
+    .code-block .kw { color: var(--accent-light); }
+    .code-block .str { color: #63bdbd; }
+    .code-block .cmt { color: var(--text-muted); opacity: 0.6; }
+
+    .arch-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 32px;
+      flex-wrap: wrap;
+    }
+
+    .arch-box {
+      padding: 20px 24px;
+      border-radius: 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--tag-border);
+      text-align: center;
+      min-width: 140px;
+    }
+    .arch-box.accent-box {
+      border-color: var(--accent);
+      background: rgba(238,0,0,0.06);
+    }
+
+    .arch-box .box-label {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 8px;
+    }
+
+    .arch-arrow {
+      font-size: 1.8rem;
+      color: var(--text-muted);
+    }
+
+    .quote-mark {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 6rem;
+      color: var(--accent);
+      opacity: 0.3;
+      line-height: 0.5;
+      margin-bottom: 16px;
+    }
+
+    .quote-text {
+      font-family: var(--font-display);
+      font-weight: 500;
+      font-size: 1.8rem;
+      line-height: 1.4;
+      max-width: 800px;
+      margin-bottom: 20px;
+    }
+
+    .quote-attr {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .cta-list {
+      list-style: none;
+      padding: 0;
+      margin-top: 24px;
+    }
+    .cta-list li {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 0;
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(56,56,56,0.4);
+    }
+    .cta-list li:last-child { border-bottom: none; }
+    .cta-list .cta-num {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 1.1rem;
+      min-width: 28px;
+    }
+
+    .logo-footer {
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .thank-you-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      flex: 1;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 40px;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .controls > * { pointer-events: auto; }
+
+    .nav-hint {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+
+    .progress {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .progress .current { color: var(--accent); font-weight: 700; }
+
+    .notes-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-height: 35vh;
+      background: var(--bg-secondary);
+      border-top: 2px solid var(--accent);
+      padding: 24px 40px;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      z-index: 200;
+    }
+    .notes-panel.visible { transform: translateY(0); }
+    .notes-panel a { color: var(--accent-light); }
+    .notes-panel strong { color: var(--text-primary); }
+
+    .slide .animate-in { opacity: 0; transform: translateY(20px); }
+    .slide.active .animate-in { animation: fadeSlideUp 0.6s ease-out forwards; }
+    .slide.active .animate-in:nth-child(2) { animation-delay: 0.1s; }
+    .slide.active .animate-in:nth-child(3) { animation-delay: 0.2s; }
+    .slide.active .animate-in:nth-child(4) { animation-delay: 0.3s; }
+    .slide.active .animate-in:nth-child(5) { animation-delay: 0.4s; }
+    .slide.active .animate-in:nth-child(6) { animation-delay: 0.5s; }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      .slide { padding: 40px 32px; }
+      h1 { font-size: 2.2rem; }
+      h2 { font-size: 1.6rem; }
+      .two-col, .step-grid { grid-template-columns: 1fr; }
+      .big-number { font-size: 4rem; }
+      .arch-diagram { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+
+    <!-- SLIDE 1: TITLE -->
+    <div class="slide" data-notes="<strong>Viewer Tips</strong><br>← → or click to navigate between slides.<br>Press <strong>N</strong> to toggle these contextual notes — references, links, and deeper context for each slide.<br>Works in any modern browser — share this HTML file directly.<br>For best results, use fullscreen (F11).<br><br><strong>Background</strong><br>OpenShift Lightspeed is Red Hat's GenAI-powered virtual assistant embedded directly in the OpenShift console. It helps administrators and developers troubleshoot, configure, and operate clusters using natural language. The 'Bring Your Own Knowledge' (BYO Knowledge) feature extends this by allowing organizations to inject their proprietary documentation into the AI's knowledge base via RAG (Retrieval-Augmented Generation).<br><br><strong>References</strong><br>• <a href='https://redhat.com/en/blog/bring-your-own-knowledge-openshift-lightspeed'>Red Hat Blog: Bring your own knowledge to OpenShift Lightspeed</a><br>• <a href='https://docs.redhat.com/en/documentation/red_hat_openshift_lightspeed/1.0/html-single/configure/index'>OpenShift Lightspeed 1.0 Configuration Docs</a><br>• <a href='https://github.com/openshift/lightspeed-rag-content'>GitHub: openshift/lightspeed-rag-content</a>">
+      <div class="breadcrumb animate-in">
+        <svg class="rh-logo small" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 613 145" role="img" aria-label="Red Hat">
+          <title>Red Hat</title>
+          <path d="M127.47,83.49c12.51,0,30.61-2.58,30.61-17.46a14,14,0,0,0-.31-3.42l-7.45-32.36c-1.72-7.12-3.23-10.35-15.73-16.6C124.89,8.69,103.76.5,97.51.5,91.69.5,90,8,83.06,8c-6.68,0-11.64-5.6-17.89-5.6-6,0-9.91,4.09-12.93,12.5,0,0-8.41,23.72-9.49,27.16A6.43,6.43,0,0,0,42.53,44c0,9.22,36.3,39.45,84.94,39.45M160,72.07c1.73,8.19,1.73,9.05,1.73,10.13,0,14-15.74,21.77-36.43,21.77C78.54,104,37.58,76.6,37.58,58.49a18.45,18.45,0,0,1,1.51-7.33C22.27,52,.5,55,.5,74.22c0,31.48,74.59,70.28,133.65,70.28,45.28,0,56.7-20.48,56.7-36.65,0-12.72-11-27.16-30.83-35.78" fill="#e00"/>
+          <path d="M160,72.07c1.73,8.19,1.73,9.05,1.73,10.13,0,14-15.74,21.77-36.43,21.77C78.54,104,37.58,76.6,37.58,58.49a18.45,18.45,0,0,1,1.51-7.33l3.66-9.06A6.43,6.43,0,0,0,42.53,44c0,9.22,36.3,39.45,84.94,39.45,12.51,0,30.61-2.58,30.61-17.46a14,14,0,0,0-.31-3.42Z"/>
+          <path d="M579.74,92.8c0,11.89,7.15,17.67,20.19,17.67a52.11,52.11,0,0,0,11.89-1.68V95a24.84,24.84,0,0,1-7.68,1.16c-5.37,0-7.36-1.68-7.36-6.73V68.3h15.56V54.1H596.78v-18l-17,3.68V54.1H568.49V68.3h11.25Zm-53,.32c0-3.68,3.69-5.47,9.26-5.47a43.12,43.12,0,0,1,10.1,1.26v7.15a21.51,21.51,0,0,1-10.63,2.63c-5.46,0-8.73-2.1-8.73-5.57m5.2,17.56c6,0,10.84-1.26,15.36-4.31v3.37h16.82V74.08c0-13.56-9.14-21-24.39-21-8.52,0-16.94,2-26,6.1l6.1,12.52c6.52-2.74,12-4.42,16.83-4.42,7,0,10.62,2.73,10.62,8.31v2.73a49.53,49.53,0,0,0-12.62-1.58c-14.31,0-22.93,6-22.93,16.73,0,9.78,7.78,17.24,20.19,17.24m-92.44-.94h18.09V80.92h30.29v28.82H506V36.12H487.93V64.41H457.64V36.12H439.55ZM370.62,81.87c0-8,6.31-14.1,14.62-14.1A17.22,17.22,0,0,1,397,72.09V91.54A16.36,16.36,0,0,1,385.24,96c-8.2,0-14.62-6.1-14.62-14.09m26.61,27.87h16.83V32.44l-17,3.68V57.05a28.3,28.3,0,0,0-14.2-3.68c-16.19,0-28.92,12.51-28.92,28.5a28.25,28.25,0,0,0,28.4,28.6,25.12,25.12,0,0,0,14.93-4.83ZM320,67c5.36,0,9.88,3.47,11.67,8.83H308.47C310.15,70.3,314.36,67,320,67M291.33,82c0,16.2,13.25,28.82,30.28,28.82,9.36,0,16.2-2.53,23.25-8.42l-11.26-10c-2.63,2.74-6.52,4.21-11.14,4.21a14.39,14.39,0,0,1-13.68-8.83h39.65V83.55c0-17.67-11.88-30.39-28.08-30.39a28.57,28.57,0,0,0-29,28.81M262,51.58c6,0,9.36,3.78,9.36,8.31S268,68.2,262,68.2H244.11V51.58Zm-36,58.16h18.09V82.92h13.77l13.89,26.82H292l-16.2-29.45a22.27,22.27,0,0,0,13.88-20.72c0-13.25-10.41-23.45-26-23.45H226Z" fill="#fff"/>
+        </svg>
+        <span style="margin-left: 8px;">› OpenShift Lightspeed</span>
+      </div>
+      <div class="slide-label animate-in">—— OpenShift Lightspeed · Mar 2026</div>
+      <h1 class="animate-in">Make OpenShift Lightspeed<br><span class="accent-italic">Speak Your Language</span></h1>
+      <p class="subtitle animate-in">Bring Your Own Knowledge lets you augment Lightspeed's AI with your organization's private docs, runbooks, and policies — turning generic answers into tailored, context-aware guidance.</p>
+      <div class="animate-in">
+        <span class="tag accent">Technology Preview</span>
+        <span class="tag">RAG</span>
+        <span class="tag">Custom Knowledge</span>
+        <span class="tag">Enterprise AI</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: THE PAIN -->
+    <div class="slide" data-notes="<strong>The Problem in Detail</strong><br>LLMs are trained on public data — documentation, forums, blogs. They know OpenShift generically but have zero awareness of your internal configurations, naming conventions, compliance policies, or operational runbooks. When a cluster admin asks Lightspeed about a problem, they get a textbook answer that may not apply to their specific environment.<br><br>This is especially painful for regulated industries (finance, government, telecom) where procedures must follow strict internal policies that differ significantly from generic best practices.<br><br><strong>References</strong><br>• <a href='https://redhat.com/en/technologies/cloud-computing/openshift/lightspeed'>OpenShift Lightspeed Product Page</a>">
+      <div class="slide-label animate-in">—— The challenge</div>
+      <h2 class="animate-in"><img class="rh-icon small accent" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/brain.svg" alt=""> Generic AI Doesn't Know <span class="accent">Your</span> Environment</h2>
+      <div class="two-col animate-in">
+        <div class="col">
+          <h3>What AI knows</h3>
+          <ul>
+            <li>Public OpenShift documentation</li>
+            <li>Community forum answers</li>
+            <li>Generic best practices</li>
+            <li>Standard YAML manifests</li>
+          </ul>
+        </div>
+        <div class="col highlight">
+          <h3>What AI doesn't know</h3>
+          <ul>
+            <li>Your internal runbooks</li>
+            <li>Environment-specific configs</li>
+            <li>Compliance & security policies</li>
+            <li>Custom operational procedures</li>
+          </ul>
+        </div>
+      </div>
+      <p class="source animate-in">The gap between public knowledge and organizational context limits AI usefulness</p>
+    </div>
+
+    <!-- SLIDE 3: STAT SLIDE -->
+    <div class="slide" style="align-items: center; text-align: center;" data-notes="<strong>Why This Matters</strong><br>Organizations across regulated industries — financial services, telecommunications, government, healthcare — all have critical internal knowledge that shapes how they operate OpenShift. Without the ability to inject this context, AI assistants remain surface-level tools rather than genuine operational partners.<br><br>The BYO Knowledge capability transforms Lightspeed from a generic expert into a specialized, context-aware assistant that understands your policies, your naming conventions, and your compliance requirements.<br><br>[IMAGE OPPORTUNITY] Prompt for Nano Banana Pro 2: 'Abstract visualization of knowledge flowing from documents into an AI brain, dark background with red and white data streams, geometric shapes suggesting documents transforming into neural pathways, Red Hat red (#ee0000) accents on dark black background, no text, 16:9 aspect ratio'">
+      <img class="rh-icon xl accent animate-in" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/data.svg" alt="">
+      <div class="big-number animate-in">It's Not Just Data</div>
+      <p class="stat-context animate-in">It's <em>your</em> data — internal runbooks, compliance policies, environment configs, and operational expertise that sit outside any public knowledge base.</p>
+    </div>
+
+    <!-- SLIDE 4: THE INSIGHT -->
+    <div class="slide" data-notes="<strong>How BYO Knowledge Works</strong><br>The BYO Knowledge feature uses Retrieval-Augmented Generation (RAG) to bridge the gap between Lightspeed's LLM and your organization's proprietary documentation. When a user asks a question, Lightspeed searches your custom knowledge base for relevant context, then feeds that context to the LLM alongside the question — producing answers that are grounded in your actual documentation.<br><br>This is not fine-tuning the model. Your data never leaves your environment for training. Instead, it's retrieved at query time and used as context.<br><br><strong>References</strong><br>• <a href='https://redhat.com/en/blog/bring-your-own-knowledge-openshift-lightspeed'>Red Hat Blog: Bring your own knowledge to OpenShift Lightspeed (Aug 2025)</a>">
+      <div class="slide-label animate-in">—— The solution</div>
+      <h2 class="animate-in">Bring Your Own Knowledge <span class="accent">Bridges the Gap</span></h2>
+      <p class="subtitle animate-in">Augment Lightspeed with your organization's private documentation and internal expertise using Retrieval-Augmented Generation (RAG). No model fine-tuning required — your data stays in your environment.</p>
+      <div class="step-grid animate-in">
+        <div class="step-card">
+          <img class="rh-icon medium accent" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/storage.svg" alt="">
+          <h3 style="margin-top: 12px;">Your Docs</h3>
+          <p>Markdown files containing runbooks, policies, and configurations</p>
+        </div>
+        <div class="step-card" style="border-color: var(--accent);">
+          <img class="rh-icon medium accent" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/ai-ml.svg" alt="">
+          <h3 style="margin-top: 12px;">RAG Engine</h3>
+          <p>Embeddings search finds relevant context at query time</p>
+        </div>
+        <div class="step-card">
+          <img class="rh-icon medium accent" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/ai-experience.svg" alt="">
+          <h3 style="margin-top: 12px;">Tailored Answers</h3>
+          <p>LLM responds with your organization's context and policies</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: THREE STEPS -->
+    <div class="slide" data-notes="<strong>Process Overview</strong><br>The BYO Knowledge workflow is straightforward:<br><br>1. <strong>Prepare</strong> — Gather your markdown documentation into a directory. Subdirectories are supported. Focus on operational runbooks, environment-specific configurations, compliance checklists, and internal best practices.<br><br>2. <strong>Build</strong> — Use the provided container image tool (<code>lightspeed-rag-tool-rhel9</code>) to process your docs into vector embeddings and package them as a container image.<br><br>3. <strong>Configure</strong> — Push the image to a registry accessible by your cluster, then add a <code>rag</code> stanza to your <code>OLSConfig</code> custom resource. The operator handles the rest.<br><br><strong>Prerequisites</strong><br>• OpenShift Lightspeed operator already installed and configured<br>• An LLM provider configured (RHELAI, OpenShift AI, watsonx, OpenAI, or Azure OpenAI)<br>• Podman installed on your workstation<br>• Access to an image registry (OpenShift internal registry or external)">
+      <div class="slide-label animate-in">—— Installation</div>
+      <h2 class="animate-in">Three Steps to a <span class="accent">Smarter</span> Assistant</h2>
+      <div class="step-grid animate-in">
+        <div class="step-card">
+          <div class="step-number">01</div>
+          <h3>Prepare Your Docs</h3>
+          <p>Gather markdown files — runbooks, policies, configs — into a directory structure</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">02</div>
+          <h3>Build the Image</h3>
+          <p>Use the RAG tool container to generate embeddings and package as a container image</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">03</div>
+          <h3>Configure OLSConfig</h3>
+          <p>Add the <code style="color: var(--accent-light);">rag</code> stanza to your OLSConfig CR and the operator does the rest</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: BUILD COMMANDS -->
+    <div class="slide" data-notes="<strong>Detailed Build Steps</strong><br><br><strong>Step 1:</strong> Prepare a separate output directory (not inside your content directory).<br><br><strong>Step 2:</strong> Run the RAG tool container. The tool reads your markdown files, generates vector embeddings, and produces a TAR file containing the knowledge image.<br><br><strong>Step 3:</strong> Load the TAR into Podman, re-tag for your registry, and push.<br><br>The container image <code>registry.redhat.io/openshift-lightspeed-tech-preview/lightspeed-rag-tool-rhel9:latest</code> handles all the embedding generation internally.<br><br><strong>Tips</strong><br>• Ensure you're authenticated to registry.redhat.io before pulling the tool image<br>• If using the OpenShift internal registry, expose it first: <a href='https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/registry/securing-exposing-registry'>Exposing the Registry</a><br>• As of OLS 1.0.9, floating tags like <code>latest</code> are checked every 15 minutes via ImageStream objects">
+      <div class="slide-label animate-in">—— Building the knowledge image</div>
+      <h2 class="animate-in"><img class="rh-icon small accent" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/container.svg" alt=""> Build and Push <span class="accent">Your Knowledge</span></h2>
+      <div class="code-block animate-in"><span class="cmt"># Run the RAG tool to build embeddings from your docs</span>
+$ podman run -it --rm --device=/dev/fuse \
+  -v <span class="str">$XDG_RUNTIME_DIR/containers/auth.json</span>:/run/user/0/containers/auth.json:Z \
+  -v <span class="str">/path/to/content</span>:/markdown:Z \
+  -v <span class="str">/my/output/path</span>:/output:Z \
+  registry.redhat.io/openshift-lightspeed-tech-preview/lightspeed-rag-tool-rhel9:latest
+
+<span class="cmt"># Load, tag, and push the resulting image</span>
+$ podman load -i <span class="str">/my/output/path/byok-image.tar</span>
+$ podman tag localhost/byok-image:latest <span class="str">&lt;registry&gt;/openshift-lightspeed/myimage-byok:latest</span>
+$ podman push <span class="str">&lt;registry&gt;/openshift-lightspeed/myimage-byok:latest</span></div>
+      <p class="source animate-in">Source: Red Hat Blog — "Bring your own knowledge to OpenShift Lightspeed" (Aug 2025)</p>
+    </div>
+
+    <!-- SLIDE 7: OLSCONFIG -->
+    <div class="slide" data-notes="<strong>OLSConfig Details</strong><br><br>The <code>rag</code> stanza is added at <code>.spec.ols.rag</code> — at the same indentation level as <code>defaultModel</code>. Key fields:<br><br>• <strong>image</strong>: The pull spec of your knowledge image (internal or external registry)<br>• <strong>indexID</strong>: The identifier for the vector database index (use <code>vector_db_index</code>)<br>• <strong>indexPath</strong>: The path inside the container where the index is mounted (use <code>/rag/vector_db</code>)<br><br>After applying the updated OLSConfig, the Lightspeed operator automatically restarts the API server pods in the <code>openshift-lightspeed</code> namespace to pick up the new knowledge base.<br><br><strong>Image Pull Secrets (OLS 1.0.9+)</strong><br>If your knowledge image is in a private registry, you can specify an array of image pull secrets directly in the OLSConfig CR.<br><br><strong>Auto-Updates</strong><br>Using floating tags like <code>latest</code>, OpenShift checks for image updates every 15 minutes via ImageStream objects — so you can push doc updates and have them picked up automatically.">
+      <div class="slide-label animate-in">—— Configuration</div>
+      <h2 class="animate-in"><img class="rh-icon small accent" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/ui/code.svg" alt=""> Point Lightspeed at <span class="accent">Your Knowledge</span></h2>
+      <div class="code-block animate-in"><span class="kw">apiVersion</span>: ols.openshift.io/v1alpha1
+<span class="kw">kind</span>: OLSConfig
+<span class="kw">spec</span>:
+  <span class="kw">llm</span>:
+    <span class="kw">providers</span>:
+      - <span class="kw">name</span>: <span class="str">myProvider</span>
+        <span class="kw">type</span>: <span class="str">openai</span>
+        <span class="kw">credentialsSecretRef</span>:
+          <span class="kw">name</span>: <span class="str">openai-api-keys</span>
+        <span class="kw">models</span>:
+          - <span class="kw">name</span>: <span class="str">gpt-4o</span>
+  <span class="kw">ols</span>:
+    <span class="kw">defaultModel</span>: <span class="str">gpt-4o</span>
+    <span class="kw">defaultProvider</span>: <span class="str">myProvider</span>
+    <span class="kw">rag</span>:                                     <span class="cmt"># ← Add this stanza</span>
+      - <span class="kw">image</span>: <span class="str">&lt;registry&gt;/openshift-lightspeed/myimage-byok:latest</span>
+        <span class="kw">indexID</span>: <span class="str">vector_db_index</span>
+        <span class="kw">indexPath</span>: <span class="str">/rag/vector_db</span></div>
+      <p class="source animate-in">The operator auto-restarts Lightspeed pods to apply the new knowledge base</p>
+    </div>
+
+    <!-- SLIDE 8: ARCHITECTURE -->
+    <div class="slide" data-notes="<strong>Architecture Deep Dive</strong><br><br>The RAG pipeline works as follows:<br><br>1. Your markdown documents are processed by the RAG tool, which chunks them and generates vector embeddings using a language model.<br><br>2. These embeddings are packaged into a container image and stored in your registry.<br><br>3. When a user asks a question in the OpenShift console, Lightspeed performs a similarity search against the vector index to find the most relevant chunks from your documentation.<br><br>4. The retrieved context is prepended to the user's question and sent to the configured LLM provider.<br><br>5. The LLM generates a response grounded in your organization's actual documentation — not just generic knowledge.<br><br>Your data never leaves your infrastructure for model training. It's only used at query time as retrieval context.">
+      <div class="slide-label animate-in">—— Architecture</div>
+      <h2 class="animate-in">How RAG Powers <span class="accent">Custom Knowledge</span></h2>
+      <div class="arch-diagram animate-in">
+        <div class="arch-box">
+          <img class="rh-icon small" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/storage.svg" alt="">
+          <div class="box-label">Your Docs<br><span style="font-size:0.65rem; color: var(--text-muted);">(Markdown)</span></div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box">
+          <img class="rh-icon small" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/container.svg" alt="">
+          <div class="box-label">RAG Tool<br><span style="font-size:0.65rem; color: var(--text-muted);">(Embeddings)</span></div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box accent-box">
+          <img class="rh-icon small accent" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/container.svg" alt="">
+          <div class="box-label" style="color: var(--accent);">Knowledge Image<br><span style="font-size:0.65rem;">(Vector Index)</span></div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box">
+          <img class="rh-icon small" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/ai-ml.svg" alt="">
+          <div class="box-label">Lightspeed<br><span style="font-size:0.65rem; color: var(--text-muted);">(Query + Context)</span></div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box">
+          <img class="rh-icon small" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/ai-experience.svg" alt="">
+          <div class="box-label">Tailored Answer<br><span style="font-size:0.65rem; color: var(--text-muted);">(Your Context)</span></div>
+        </div>
+      </div>
+      <p style="text-align: center; color: var(--text-muted); margin-top: 32px; font-size: 0.95rem;" class="animate-in">Your data never leaves your environment for training — it's retrieved at query time as context</p>
+    </div>
+
+    <!-- SLIDE 9: CTA — DEMO -->
+    <div class="slide" data-notes="<strong>Demo Outline</strong><br><br>For the live demo, walk through:<br><br>1. Show a directory of sample internal documentation (markdown files with custom runbooks, compliance policies, etc.)<br><br>2. Run the RAG tool container to build the knowledge image — show the podman command and output.<br><br>3. Push the image to the cluster's registry.<br><br>4. Edit the OLSConfig CR to add the rag stanza — apply it and show the operator restarting pods.<br><br>5. Open the OpenShift console, navigate to Lightspeed, and ask a question that's specific to the custom documentation. Show how the answer is grounded in your internal docs vs. a generic answer without BYO Knowledge.<br><br><strong>Resources</strong><br>• <a href='https://redhat.com/en/blog/bring-your-own-knowledge-openshift-lightspeed'>Blog Post: Bring your own knowledge to OpenShift Lightspeed</a><br>• <a href='https://docs.redhat.com/en/documentation/red_hat_openshift_lightspeed/1.0/html-single/configure/index'>OpenShift Lightspeed 1.0 Docs</a><br>• <a href='https://github.com/openshift/lightspeed-rag-content'>GitHub: openshift/lightspeed-rag-content</a><br>• <a href='https://developers.redhat.com/learn/openshift/get-started-red-hat-openshift-lightspeed'>Developer Learning: Get Started with OpenShift Lightspeed</a>">
+      <div class="slide-label animate-in">—— Demonstration</div>
+      <h2 class="animate-in">See It <span class="accent">In Action</span></h2>
+      <p class="subtitle animate-in">Let's walk through a live demo — from markdown docs to tailored Lightspeed answers in minutes.</p>
+      <ul class="cta-list animate-in">
+        <li>
+          <span class="cta-num">01</span>
+          <span>Prepare internal docs as markdown files in a directory</span>
+        </li>
+        <li>
+          <span class="cta-num">02</span>
+          <span>Run the RAG tool container to build the knowledge image</span>
+        </li>
+        <li>
+          <span class="cta-num">03</span>
+          <span>Push the image and update the OLSConfig CR</span>
+        </li>
+        <li>
+          <span class="cta-num">04</span>
+          <span>Ask Lightspeed a question — see your context in the answer</span>
+        </li>
+      </ul>
+      <div style="margin-top: 32px;" class="animate-in">
+        <span class="tag accent">Live Demo</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: THANK YOU -->
+    <div class="slide" style="background: var(--bg-primary);" data-notes="<strong>Additional Resources</strong><br><br>• <a href='https://redhat.com/en/blog/bring-your-own-knowledge-openshift-lightspeed'>Blog: Bring your own knowledge to OpenShift Lightspeed</a><br>• <a href='https://docs.redhat.com/en/documentation/red_hat_openshift_lightspeed/1.0/html-single/configure/index'>OpenShift Lightspeed 1.0 Configuration Guide</a><br>• <a href='https://github.com/openshift/lightspeed-rag-content'>GitHub: openshift/lightspeed-rag-content</a><br>• <a href='https://developers.redhat.com/learn/openshift/get-started-red-hat-openshift-lightspeed'>Get Started with OpenShift Lightspeed</a><br>• <a href='https://redhat.com/en/technologies/cloud-computing/openshift/lightspeed'>OpenShift Lightspeed Product Page</a>">
+      <div class="thank-you-center">
+        <h1 class="animate-in" style="font-size: 4rem;">Thank <span class="accent">You</span></h1>
+        <p class="animate-in" style="color: var(--text-muted); font-size: 1.1rem; margin-top: 16px;">Red Hat OpenShift Lightspeed</p>
+        <div class="logo-footer animate-in" style="margin-top: 48px;">
+          <svg class="rh-logo large" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 613 145" role="img" aria-label="Red Hat">
+            <title>Red Hat</title>
+            <path d="M127.47,83.49c12.51,0,30.61-2.58,30.61-17.46a14,14,0,0,0-.31-3.42l-7.45-32.36c-1.72-7.12-3.23-10.35-15.73-16.6C124.89,8.69,103.76.5,97.51.5,91.69.5,90,8,83.06,8c-6.68,0-11.64-5.6-17.89-5.6-6,0-9.91,4.09-12.93,12.5,0,0-8.41,23.72-9.49,27.16A6.43,6.43,0,0,0,42.53,44c0,9.22,36.3,39.45,84.94,39.45M160,72.07c1.73,8.19,1.73,9.05,1.73,10.13,0,14-15.74,21.77-36.43,21.77C78.54,104,37.58,76.6,37.58,58.49a18.45,18.45,0,0,1,1.51-7.33C22.27,52,.5,55,.5,74.22c0,31.48,74.59,70.28,133.65,70.28,45.28,0,56.7-20.48,56.7-36.65,0-12.72-11-27.16-30.83-35.78" fill="#e00"/>
+            <path d="M160,72.07c1.73,8.19,1.73,9.05,1.73,10.13,0,14-15.74,21.77-36.43,21.77C78.54,104,37.58,76.6,37.58,58.49a18.45,18.45,0,0,1,1.51-7.33l3.66-9.06A6.43,6.43,0,0,0,42.53,44c0,9.22,36.3,39.45,84.94,39.45,12.51,0,30.61-2.58,30.61-17.46a14,14,0,0,0-.31-3.42Z"/>
+            <path d="M579.74,92.8c0,11.89,7.15,17.67,20.19,17.67a52.11,52.11,0,0,0,11.89-1.68V95a24.84,24.84,0,0,1-7.68,1.16c-5.37,0-7.36-1.68-7.36-6.73V68.3h15.56V54.1H596.78v-18l-17,3.68V54.1H568.49V68.3h11.25Zm-53,.32c0-3.68,3.69-5.47,9.26-5.47a43.12,43.12,0,0,1,10.1,1.26v7.15a21.51,21.51,0,0,1-10.63,2.63c-5.46,0-8.73-2.1-8.73-5.57m5.2,17.56c6,0,10.84-1.26,15.36-4.31v3.37h16.82V74.08c0-13.56-9.14-21-24.39-21-8.52,0-16.94,2-26,6.1l6.1,12.52c6.52-2.74,12-4.42,16.83-4.42,7,0,10.62,2.73,10.62,8.31v2.73a49.53,49.53,0,0,0-12.62-1.58c-14.31,0-22.93,6-22.93,16.73,0,9.78,7.78,17.24,20.19,17.24m-92.44-.94h18.09V80.92h30.29v28.82H506V36.12H487.93V64.41H457.64V36.12H439.55ZM370.62,81.87c0-8,6.31-14.1,14.62-14.1A17.22,17.22,0,0,1,397,72.09V91.54A16.36,16.36,0,0,1,385.24,96c-8.2,0-14.62-6.1-14.62-14.09m26.61,27.87h16.83V32.44l-17,3.68V57.05a28.3,28.3,0,0,0-14.2-3.68c-16.19,0-28.92,12.51-28.92,28.5a28.25,28.25,0,0,0,28.4,28.6,25.12,25.12,0,0,0,14.93-4.83ZM320,67c5.36,0,9.88,3.47,11.67,8.83H308.47C310.15,70.3,314.36,67,320,67M291.33,82c0,16.2,13.25,28.82,30.28,28.82,9.36,0,16.2-2.53,23.25-8.42l-11.26-10c-2.63,2.74-6.52,4.21-11.14,4.21a14.39,14.39,0,0,1-13.68-8.83h39.65V83.55c0-17.67-11.88-30.39-28.08-30.39a28.57,28.57,0,0,0-29,28.81M262,51.58c6,0,9.36,3.78,9.36,8.31S268,68.2,262,68.2H244.11V51.58Zm-36,58.16h18.09V82.92h13.77l13.89,26.82H292l-16.2-29.45a22.27,22.27,0,0,0,13.88-20.72c0-13.25-10.41-23.45-26-23.45H226Z" fill="#fff"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="notes-panel"></div>
+
+  <div class="controls">
+    <div class="nav-hint">← → or click to navigate · N for additional context</div>
+    <div class="progress"><span class="current">1</span> / <span class="total">10</span></div>
+  </div>
+
+  <script>
+    (function() {
+      const slides = document.querySelectorAll('.slide');
+      const currentEl = document.querySelector('.current');
+      const totalEl = document.querySelector('.total');
+      const notesPanel = document.querySelector('.notes-panel');
+      let idx = 0;
+      let notesVisible = false;
+
+      totalEl.textContent = slides.length;
+
+      function show(i) {
+        slides.forEach((s, j) => {
+          s.classList.toggle('active', j === i);
+          s.style.display = j === i ? 'flex' : 'none';
+        });
+        currentEl.textContent = i + 1;
+        if (notesPanel) {
+          const note = slides[i].dataset.notes || '';
+          notesPanel.innerHTML = note;
+          if (!notesVisible) notesPanel.classList.remove('visible');
+        }
+      }
+
+      function next() { if (idx < slides.length - 1) { idx++; show(idx); } }
+      function prev() { if (idx > 0) { idx--; show(idx); } }
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+        if (e.key === 'ArrowLeft') { prev(); }
+        if (e.key === 'n' || e.key === 'N') {
+          notesVisible = !notesVisible;
+          if (notesPanel) notesPanel.classList.toggle('visible', notesVisible);
+          show(idx);
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (e.target.closest('.controls') || e.target.closest('.notes-panel')) return;
+        const x = e.clientX / window.innerWidth;
+        x > 0.5 ? next() : prev();
+      });
+
+      let touchStartX = 0;
+      document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+      document.addEventListener('touchend', (e) => {
+        const diff = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(diff) > 50) { diff < 0 ? next() : prev(); }
+      });
+
+      show(0);
+    })();
+  </script>
+</body>
+</html>

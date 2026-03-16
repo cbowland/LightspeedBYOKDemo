@@ -1,0 +1,6 @@
+# in the ols: bit, under userDataCollection: {} , add at the same indent level
+
+    rag:
+      - image: 'default-route-openshift-image-registry.apps.cluster-clhnm.dynamic.redhatworkshops.io/openshift-lightspeed/byok-image:latest'
+        indexID: vector_db_index
+        indexPath: /rag/vector_db
