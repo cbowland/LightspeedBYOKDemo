@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bring Your Own Knowledge to OpenShift Lightspeed — Video</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700;900&family=Red+Hat+Text:wght@400;500;700&family=Red+Hat+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #000000;
+      --bg-secondary: #1f1f1f;
+      --bg-surface: #292929;
+      --text-primary: #ffffff;
+      --text-secondary: #c7c7c7;
+      --text-muted: #a3a3a3;
+      --accent: #ee0000;
+      --accent-dark: #a60000;
+      --accent-light: #f56e6e;
+      --tag-border: #383838;
+      --font-display: 'Red Hat Display', sans-serif;
+      --font-body: 'Red Hat Text', sans-serif;
+      --font-mono: 'Red Hat Mono', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      overflow: hidden;
+      cursor: none;
+    }
+    body.paused { cursor: default; }
+
+    /* ── SCENE CONTAINER ── */
+    .scene {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px 100px 100px;
+      opacity: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .scene.active {
+      pointer-events: auto;
+    }
+
+    /* Ambient glow */
+    .scene::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      right: -10%;
+      width: 60%;
+      height: 60%;
+      background: radial-gradient(ellipse, rgba(238,0,0,0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .scene:nth-child(even)::before {
+      top: auto; bottom: -20%; right: auto; left: -10%;
+    }
+    .scene > * { position: relative; z-index: 1; }
+
+    /* ── TRANSITIONS ── */
+    .scene.fade-in  { animation: sceneFadeIn 1s ease forwards; }
+    .scene.fade-out { animation: sceneFadeOut 0.8s ease forwards; }
+
+    @keyframes sceneFadeIn {
+      0%   { opacity: 0; transform: scale(1.02); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes sceneFadeOut {
+      0%   { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.98); }
+    }
+
+    /* ── ELEMENT ANIMATIONS ── */
+    .anim {
+      opacity: 0;
+      transform: translateY(28px);
+    }
+    .anim.show {
+      animation: elemIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes elemIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Typewriter for narration */
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ── TYPOGRAPHY ── */
+    .scene-label {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--accent);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 3.5rem;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 2.4rem;
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+
+    h3 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.4rem;
+      line-height: 1.3;
+      margin-bottom: 12px;
+      color: var(--text-secondary);
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 700px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .accent { color: var(--accent); }
+    .accent-italic { color: var(--accent); font-style: italic; }
+
+    .tag {
+      display: inline-block;
+      padding: 6px 16px;
+      border: 1px solid var(--tag-border);
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+    .tag.accent { border-color: var(--accent); color: var(--accent); }
+
+    .big-number {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 5.5rem;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .stat-context {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+    }
+
+    /* ── LAYOUT COMPONENTS ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      margin-top: 24px;
+    }
+
+    .col {
+      padding: 28px;
+      border-radius: 12px;
+      background: rgba(41,41,41,0.5);
+      border: 1px solid var(--tag-border);
+    }
+    .col.highlight {
+      border-color: var(--accent);
+      background: rgba(238,0,0,0.04);
+    }
+    .col h3 { margin-bottom: 16px; }
+    .col ul { list-style: none; padding: 0; }
+    .col ul li {
+      padding: 8px 0;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      border-bottom: 1px solid rgba(56,56,56,0.5);
+      opacity: 0;
+    }
+    .col ul li:last-child { border-bottom: none; }
+    .col ul li.show {
+      animation: elemIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .step-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px;
+      margin-top: 32px;
+    }
+
+    .step-card {
+      padding: 32px 24px;
+      border-radius: 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--tag-border);
+      text-align: center;
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+    }
+    .step-card.show {
+      animation: cardIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes cardIn {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .step-number {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 2.4rem;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .step-card h3 {
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      font-size: 1.2rem;
+    }
+    .step-card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .code-block {
+      background: var(--bg-secondary);
+      border: 1px solid var(--tag-border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      margin-top: 16px;
+      white-space: pre;
+    }
+    .code-block .kw { color: var(--accent-light); }
+    .code-block .str { color: #63bdbd; }
+    .code-block .cmt { color: var(--text-muted); opacity: 0.6; }
+
+    /* Code typing effect */
+    .code-block .code-line {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+    .code-block .code-line.show {
+      animation: codeLineIn 0.35s ease forwards;
+    }
+    @keyframes codeLineIn {
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .arch-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 32px;
+      flex-wrap: wrap;
+    }
+
+    .arch-box {
+      padding: 20px 24px;
+      border-radius: 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--tag-border);
+      text-align: center;
+      min-width: 140px;
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    .arch-box.accent-box {
+      border-color: var(--accent);
+      background: rgba(238,0,0,0.06);
+    }
+    .arch-box.show {
+      animation: archBoxIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes archBoxIn {
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .arch-box .box-label {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 8px;
+    }
+
+    .arch-arrow {
+      font-size: 1.8rem;
+      color: var(--text-muted);
+      opacity: 0;
+    }
+    .arch-arrow.show {
+      animation: arrowPulse 0.4s ease forwards;
+    }
+    @keyframes arrowPulse {
+      0%   { opacity: 0; transform: translateX(-12px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+
+    .rh-icon { height: 48px; width: 48px; filter: brightness(0) invert(1); vertical-align: middle; }
+    .rh-icon.small { height: 24px; width: 24px; }
+    .rh-icon.medium { height: 48px; width: 48px; }
+    .rh-icon.large { height: 64px; width: 64px; }
+    .rh-icon.xl { height: 96px; width: 96px; }
+    .rh-icon.accent { filter: invert(12%) sepia(100%) saturate(10000%) hue-rotate(0deg) brightness(95%); }
+
+    .cta-list { list-style: none; padding: 0; margin-top: 24px; }
+    .cta-list li {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 0;
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(56,56,56,0.4);
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    .cta-list li:last-child { border-bottom: none; }
+    .cta-list li.show {
+      animation: listIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes listIn {
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .cta-num {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 1.1rem;
+      min-width: 28px;
+    }
+
+    .source {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: auto;
+      padding-top: 24px;
+    }
+
+    .thank-you-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      flex: 1;
+    }
+
+    .logo-footer {
+      text-align: center;
+      margin-top: 48px;
+    }
+
+    .rh-logo { height: 28px; width: auto; }
+    .rh-logo.small { height: 20px; }
+    .rh-logo.large { height: 40px; }
+
+    /* ── NARRATION BAR ── */
+    .narration-bar {
+      position: fixed;
+      bottom: 48px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 800px;
+      width: 90%;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(56,56,56,0.6);
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      text-align: center;
+      z-index: 200;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .narration-bar.visible { opacity: 1; }
+
+    /* ── PROGRESS BAR ── */
+    .progress-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      z-index: 300;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.3s linear;
+    }
+
+    /* ── PLAYBACK CONTROLS ── */
+    .controls {
+      position: fixed;
+      top: 20px;
+      right: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 300;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    body.paused .controls,
+    body:hover .controls { opacity: 1; }
+
+    .ctrl-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ctrl-btn:hover {
+      background: rgba(255,255,255,0.14);
+      color: var(--text-primary);
+    }
+    .ctrl-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .time-display {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      min-width: 60px;
+      text-align: right;
+    }
+
+    /* ── OPENING COUNTDOWN ── */
+    .countdown-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      transition: opacity 0.6s ease;
+    }
+    .countdown-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .countdown-num {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 8rem;
+      color: var(--accent);
+      animation: countPulse 1s ease infinite;
+    }
+    @keyframes countPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.7; }
+    }
+
+    /* ── PAUSE OVERLAY ── */
+    .pause-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 400;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .pause-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .pause-icon {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 3rem;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .pause-bars {
+      display: flex;
+      gap: 8px;
+    }
+    .pause-bars span {
+      width: 10px;
+      height: 48px;
+      background: var(--text-primary);
+      border-radius: 3px;
+    }
+    .pause-hint {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 16px;
+      text-align: center;
+    }
+
+    /* ── SCENE-SPECIFIC ── */
+    .scene.center-content {
+      align-items: center;
+      text-align: center;
+    }
+
+    /* Pulse animation for accent highlight */
+    .pulse-glow {
+      animation: pulseGlow 2s ease-in-out infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { text-shadow: 0 0 20px rgba(238,0,0,0.3); }
+      50% { text-shadow: 0 0 40px rgba(238,0,0,0.6); }
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .scene { padding: 40px 32px 90px; }
+      h1 { font-size: 2.2rem; }
+      h2 { font-size: 1.6rem; }
+      .two-col, .step-grid { grid-template-columns: 1fr; }
+      .big-number { font-size: 4rem; }
+      .arch-diagram { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- COUNTDOWN -->
+  <div class="countdown-overlay" id="countdown">
+    <div style="text-align: center;">
+      <div class="countdown-num" id="countNum">3</div>
+      <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); margin-top: 16px; letter-spacing: 0.1em; text-transform: uppercase;">Starting presentation</div>
+    </div>
+  </div>
+
+  <!-- PAUSE OVERLAY -->
+  <div class="pause-overlay" id="pauseOverlay">
+    <div>
+      <div class="pause-icon">
+        <div class="pause-bars"><span></span><span></span></div>
+        Paused
+      </div>
+      <div class="pause-hint">Press Space or click to resume</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SCENE 1: TITLE -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="scene" id="s1" data-duration="10000" data-narration="OpenShift Lightspeed is Red Hat's AI assistant for OpenShift. But what if it could understand your organization's own documentation, runbooks, and policies? That's exactly what Bring Your Own Knowledge delivers.">
+    <div class="breadcrumb anim" data-delay="500">
+      <svg class="rh-logo small" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 613 145" role="img" aria-label="Red Hat">
+        <path d="M127.47,83.49c12.51,0,30.61-2.58,30.61-17.46a14,14,0,0,0-.31-3.42l-7.45-32.36c-1.72-7.12-3.23-10.35-15.73-16.6C124.89,8.69,103.76.5,97.51.5,91.69.5,90,8,83.06,8c-6.68,0-11.64-5.6-17.89-5.6-6,0-9.91,4.09-12.93,12.5,0,0-8.41,23.72-9.49,27.16A6.43,6.43,0,0,0,42.53,44c0,9.22,36.3,39.45,84.94,39.45M160,72.07c1.73,8.19,1.73,9.05,1.73,10.13,0,14-15.74,21.77-36.43,21.77C78.54,104,37.58,76.6,37.58,58.49a18.45,18.45,0,0,1,1.51-7.33C22.27,52,.5,55,.5,74.22c0,31.48,74.59,70.28,133.65,70.28,45.28,0,56.7-20.48,56.7-36.65,0-12.72-11-27.16-30.83-35.78" fill="#e00"/>
+        <path d="M160,72.07c1.73,8.19,1.73,9.05,1.73,10.13,0,14-15.74,21.77-36.43,21.77C78.54,104,37.58,76.6,37.58,58.49a18.45,18.45,0,0,1,1.51-7.33l3.66-9.06A6.43,6.43,0,0,0,42.53,44c0,9.22,36.3,39.45,84.94,39.45,12.51,0,30.61-2.58,30.61-17.46a14,14,0,0,0-.31-3.42Z"/>
+        <path d="M579.74,92.8c0,11.89,7.15,17.67,20.19,17.67a52.11,52.11,0,0,0,11.89-1.68V95a24.84,24.84,0,0,1-7.68,1.16c-5.37,0-7.36-1.68-7.36-6.73V68.3h15.56V54.1H596.78v-18l-17,3.68V54.1H568.49V68.3h11.25Zm-53,.32c0-3.68,3.69-5.47,9.26-5.47a43.12,43.12,0,0,1,10.1,1.26v7.15a21.51,21.51,0,0,1-10.63,2.63c-5.46,0-8.73-2.1-8.73-5.57m5.2,17.56c6,0,10.84-1.26,15.36-4.31v3.37h16.82V74.08c0-13.56-9.14-21-24.39-21-8.52,0-16.94,2-26,6.1l6.1,12.52c6.52-2.74,12-4.42,16.83-4.42,7,0,10.62,2.73,10.62,8.31v2.73a49.53,49.53,0,0,0-12.62-1.58c-14.31,0-22.93,6-22.93,16.73,0,9.78,7.78,17.24,20.19,17.24m-92.44-.94h18.09V80.92h30.29v28.82H506V36.12H487.93V64.41H457.64V36.12H439.55ZM370.62,81.87c0-8,6.31-14.1,14.62-14.1A17.22,17.22,0,0,1,397,72.09V91.54A16.36,16.36,0,0,1,385.24,96c-8.2,0-14.62-6.1-14.62-14.09m26.61,27.87h16.83V32.44l-17,3.68V57.05a28.3,28.3,0,0,0-14.2-3.68c-16.19,0-28.92,12.51-28.92,28.5a28.25,28.25,0,0,0,28.4,28.6,25.12,25.12,0,0,0,14.93-4.83ZM320,67c5.36,0,9.88,3.47,11.67,8.83H308.47C310.15,70.3,314.36,67,320,67M291.33,82c0,16.2,13.25,28.82,30.28,28.82,9.36,0,16.2-2.53,23.25-8.42l-11.26-10c-2.63,2.74-6.52,4.21-11.14,4.21a14.39,14.39,0,0,1-13.68-8.83h39.65V83.55c0-17.67-11.88-30.39-28.08-30.39a28.57,28.57,0,0,0-29,28.81M262,51.58c6,0,9.36,3.78,9.36,8.31S268,68.2,262,68.2H244.11V51.58Zm-36,58.16h18.09V82.92h13.77l13.89,26.82H292l-16.2-29.45a22.27,22.27,0,0,0,13.88-20.72c0-13.25-10.41-23.45-26-23.45H226Z" fill="#fff"/>
+      </svg>
+      <span style="margin-left: 8px;">Red Hat OpenShift Lightspeed</span>
+    </div>
+    <div class="scene-label anim" data-delay="800">OpenShift Lightspeed &middot; Mar 2026</div>
+    <h1 class="anim" data-delay="1200">Make OpenShift Lightspeed<br><span class="accent-italic pulse-glow">Speak Your Language</span></h1>
+    <p class="subtitle anim" data-delay="2000">Bring Your Own Knowledge lets you augment Lightspeed's AI with your organization's private docs, runbooks, and policies &mdash; turning generic answers into tailored, context-aware guidance.</p>
+    <div class="anim" data-delay="3200">
+      <span class="tag accent">Technology Preview</span>
+      <span class="tag">RAG</span>
+      <span class="tag">Custom Knowledge</span>
+      <span class="tag">Enterprise AI</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SCENE 2: THE PAIN -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="scene" id="s2" data-duration="12000" data-narration="Large language models know OpenShift generically. But they have zero awareness of your internal configurations, naming conventions, compliance policies, or operational runbooks. The gap between public knowledge and your reality limits AI usefulness.">
+    <div class="scene-label anim" data-delay="400">The challenge</div>
+    <h2 class="anim" data-delay="800">Generic AI Doesn't Know <span class="accent">Your</span> Environment</h2>
+    <div class="two-col anim" data-delay="1400">
+      <div class="col" id="s2-col1">
+        <h3>What AI knows</h3>
+        <ul>
+          <li data-delay="2000">Public OpenShift documentation</li>
+          <li data-delay="2400">Community forum answers</li>
+          <li data-delay="2800">Generic best practices</li>
+          <li data-delay="3200">Standard YAML manifests</li>
+        </ul>
+      </div>
+      <div class="col highlight" id="s2-col2">
+        <h3>What AI <span class="accent">doesn't</span> know</h3>
+        <ul>
+          <li data-delay="4000">Your internal runbooks</li>
+          <li data-delay="4400">Environment-specific configs</li>
+          <li data-delay="4800">Compliance &amp; security policies</li>
+          <li data-delay="5200">Custom operational procedures</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SCENE 3: STAT -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="scene center-content" id="s3" data-duration="9000" data-narration="This isn't about more data. It's about YOUR data &mdash; the internal runbooks, compliance policies, environment configs, and operational expertise that sit outside any public knowledge base.">
+    <img class="rh-icon xl accent anim" data-delay="400" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/data.svg" alt="">
+    <div class="big-number anim" data-delay="1000">It's Not Just Data</div>
+    <p class="stat-context anim" data-delay="2000">It's <em>your</em> data &mdash; internal runbooks, compliance policies, environment configs, and operational expertise that sit outside any public knowledge base.</p>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SCENE 4: THE SOLUTION -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="scene" id="s4" data-duration="12000" data-narration="Bring Your Own Knowledge bridges the gap using Retrieval-Augmented Generation. Your docs get searched at query time and fed as context to the LLM. No model fine-tuning required. Your data stays in your environment.">
+    <div class="scene-label anim" data-delay="400">The solution</div>
+    <h2 class="anim" data-delay="800">Bring Your Own Knowledge <span class="accent">Bridges the Gap</span></h2>
+    <p class="subtitle anim" data-delay="1600">Augment Lightspeed with your organization's private documentation using Retrieval-Augmented Generation. No model fine-tuning required &mdash; your data stays in your environment.</p>
+    <div class="step-grid" id="s4-cards">
+      <div class="step-card" data-delay="2800">
+        <img class="rh-icon medium accent" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/storage.svg" alt="">
+        <h3 style="margin-top: 12px;">Your Docs</h3>
+        <p>Markdown files containing runbooks, policies, and configurations</p>
+      </div>
+      <div class="step-card" style="border-color: var(--accent);" data-delay="3600">
+        <img class="rh-icon medium accent" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/ai-ml.svg" alt="">
+        <h3 style="margin-top: 12px;">RAG Engine</h3>
+        <p>Embeddings search finds relevant context at query time</p>
+      </div>
+      <div class="step-card" data-delay="4400">
+        <img class="rh-icon medium accent" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/ai-experience.svg" alt="">
+        <h3 style="margin-top: 12px;">Tailored Answers</h3>
+        <p>LLM responds with your organization's context and policies</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SCENE 5: THREE STEPS -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="scene" id="s5" data-duration="11000" data-narration="Getting started takes just three steps. Prepare your markdown documentation. Build the embeddings image using the RAG tool container. Then configure the OLSConfig custom resource and the operator handles the rest.">
+    <div class="scene-label anim" data-delay="400">Installation</div>
+    <h2 class="anim" data-delay="800">Three Steps to a <span class="accent">Smarter</span> Assistant</h2>
+    <div class="step-grid" id="s5-cards">
+      <div class="step-card" data-delay="2000">
+        <div class="step-number">01</div>
+        <h3>Prepare Your Docs</h3>
+        <p>Gather markdown files &mdash; runbooks, policies, configs &mdash; into a directory structure</p>
+      </div>
+      <div class="step-card" data-delay="3000">
+        <div class="step-number">02</div>
+        <h3>Build the Image</h3>
+        <p>Use the RAG tool container to generate embeddings and package as a container image</p>
+      </div>
+      <div class="step-card" data-delay="4000">
+        <div class="step-number">03</div>
+        <h3>Configure OLSConfig</h3>
+        <p>Add the <code style="color: var(--accent-light);">rag</code> stanza to your OLSConfig CR and the operator does the rest</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SCENE 6: BUILD COMMANDS -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="scene" id="s6" data-duration="14000" data-narration="Here's the build process. Run the RAG tool container with your markdown docs mounted as a volume. It generates vector embeddings and outputs a container image as a TAR file. Then load it into Podman, tag it for your registry, and push.">
+    <div class="scene-label anim" data-delay="400">Building the knowledge image</div>
+    <h2 class="anim" data-delay="800">Build and Push <span class="accent">Your Knowledge</span></h2>
+    <div class="code-block anim" data-delay="1400" id="s6-code"><div class="code-line" data-delay="2200"><span class="cmt"># Run the RAG tool to build embeddings from your docs</span></div><div class="code-line" data-delay="2800">$ podman run -it --rm --device=/dev/fuse \</div><div class="code-line" data-delay="3200">  -v <span class="str">$XDG_RUNTIME_DIR/containers/auth.json</span>:/run/user/0/containers/auth.json:Z \</div><div class="code-line" data-delay="3600">  -v <span class="str">/path/to/content</span>:/markdown:Z \</div><div class="code-line" data-delay="4000">  -v <span class="str">/my/output/path</span>:/output:Z \</div><div class="code-line" data-delay="4400">  registry.redhat.io/openshift-lightspeed-tech-preview/lightspeed-rag-tool-rhel9:latest</div><div class="code-line" data-delay="5400"></div><div class="code-line" data-delay="5800"><span class="cmt"># Load, tag, and push the resulting image</span></div><div class="code-line" data-delay="6400">$ podman load -i <span class="str">/my/output/path/byok-image.tar</span></div><div class="code-line" data-delay="7000">$ podman tag localhost/byok-image:latest <span class="str">&lt;registry&gt;/openshift-lightspeed/myimage-byok:latest</span></div><div class="code-line" data-delay="7600">$ podman push <span class="str">&lt;registry&gt;/openshift-lightspeed/myimage-byok:latest</span></div></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SCENE 7: OLSCONFIG -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="scene" id="s7" data-duration="14000" data-narration="Configuration is simple. Add a rag stanza to your OLSConfig custom resource pointing to your knowledge image. Specify the index ID and path. The Lightspeed operator automatically restarts the API server pods to pick up the new knowledge base.">
+    <div class="scene-label anim" data-delay="400">Configuration</div>
+    <h2 class="anim" data-delay="800">Point Lightspeed at <span class="accent">Your Knowledge</span></h2>
+    <div class="code-block anim" data-delay="1400" id="s7-code"><div class="code-line" data-delay="2200"><span class="kw">apiVersion</span>: ols.openshift.io/v1alpha1</div><div class="code-line" data-delay="2500"><span class="kw">kind</span>: OLSConfig</div><div class="code-line" data-delay="2800"><span class="kw">spec</span>:</div><div class="code-line" data-delay="3100">  <span class="kw">llm</span>:</div><div class="code-line" data-delay="3400">    <span class="kw">providers</span>:</div><div class="code-line" data-delay="3700">      - <span class="kw">name</span>: <span class="str">myProvider</span></div><div class="code-line" data-delay="4000">        <span class="kw">type</span>: <span class="str">openai</span></div><div class="code-line" data-delay="4300">        <span class="kw">credentialsSecretRef</span>:</div><div class="code-line" data-delay="4600">          <span class="kw">name</span>: <span class="str">openai-api-keys</span></div><div class="code-line" data-delay="4900">        <span class="kw">models</span>:</div><div class="code-line" data-delay="5200">          - <span class="kw">name</span>: <span class="str">gpt-4o</span></div><div class="code-line" data-delay="5500">  <span class="kw">ols</span>:</div><div class="code-line" data-delay="5800">    <span class="kw">defaultModel</span>: <span class="str">gpt-4o</span></div><div class="code-line" data-delay="6100">    <span class="kw">defaultProvider</span>: <span class="str">myProvider</span></div><div class="code-line" data-delay="6600" style="background: rgba(238,0,0,0.08); margin: 2px -8px; padding: 2px 8px; border-radius: 4px;">    <span class="kw">rag</span>:                                     <span class="cmt"># Add this stanza</span></div><div class="code-line" data-delay="7100" style="background: rgba(238,0,0,0.08); margin: 2px -8px; padding: 2px 8px; border-radius: 4px;">      - <span class="kw">image</span>: <span class="str">&lt;registry&gt;/openshift-lightspeed/myimage-byok:latest</span></div><div class="code-line" data-delay="7600" style="background: rgba(238,0,0,0.08); margin: 2px -8px; padding: 2px 8px; border-radius: 4px;">        <span class="kw">indexID</span>: <span class="str">vector_db_index</span></div><div class="code-line" data-delay="8100" style="background: rgba(238,0,0,0.08); margin: 2px -8px; padding: 2px 8px; border-radius: 4px;">        <span class="kw">indexPath</span>: <span class="str">/rag/vector_db</span></div></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SCENE 8: ARCHITECTURE -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="scene" id="s8" data-duration="13000" data-narration="Here's how the RAG pipeline works end to end. Your markdown docs are processed into vector embeddings, packaged as a container image, and mounted by Lightspeed. At query time, relevant chunks are retrieved and fed to the LLM as context. Your data never leaves your environment.">
+    <div class="scene-label anim" data-delay="400">Architecture</div>
+    <h2 class="anim" data-delay="800">How RAG Powers <span class="accent">Custom Knowledge</span></h2>
+    <div class="arch-diagram" id="s8-arch">
+      <div class="arch-box" data-delay="2000">
+        <img class="rh-icon small" style="filter: brightness(0) invert(1);" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/storage.svg" alt="">
+        <div class="box-label">Your Docs<br><span style="font-size:0.65rem; color: var(--text-muted);">(Markdown)</span></div>
+      </div>
+      <div class="arch-arrow" data-delay="2800">&rarr;</div>
+      <div class="arch-box" data-delay="3400">
+        <img class="rh-icon small" style="filter: brightness(0) invert(1);" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/container.svg" alt="">
+        <div class="box-label">RAG Tool<br><span style="font-size:0.65rem; color: var(--text-muted);">(Embeddings)</span></div>
+      </div>
+      <div class="arch-arrow" data-delay="4000">&rarr;</div>
+      <div class="arch-box accent-box" data-delay="4600">
+        <img class="rh-icon small accent" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/container.svg" alt="">
+        <div class="box-label" style="color: var(--accent);">Knowledge Image<br><span style="font-size:0.65rem;">(Vector Index)</span></div>
+      </div>
+      <div class="arch-arrow" data-delay="5200">&rarr;</div>
+      <div class="arch-box" data-delay="5800">
+        <img class="rh-icon small" style="filter: brightness(0) invert(1);" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/ai-ml.svg" alt="">
+        <div class="box-label">Lightspeed<br><span style="font-size:0.65rem; color: var(--text-muted);">(Query + Context)</span></div>
+      </div>
+      <div class="arch-arrow" data-delay="6400">&rarr;</div>
+      <div class="arch-box" data-delay="7000">
+        <img class="rh-icon small" style="filter: brightness(0) invert(1);" src="https://cdn.jsdelivr.net/npm/@rhds/icons@2.1.0/standard/ai-experience.svg" alt="">
+        <div class="box-label">Tailored Answer<br><span style="font-size:0.65rem; color: var(--text-muted);">(Your Context)</span></div>
+      </div>
+    </div>
+    <p style="text-align: center; color: var(--text-muted); margin-top: 32px; font-size: 0.95rem;" class="anim" data-delay="8000">Your data never leaves your environment for training &mdash; it's retrieved at query time as context</p>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SCENE 9: DEMO CTA -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="scene" id="s9" data-duration="10000" data-narration="From markdown docs to tailored Lightspeed answers in minutes. Prepare your docs, build the image, update the config, and ask Lightspeed a question grounded in your own context.">
+    <div class="scene-label anim" data-delay="400">Demonstration</div>
+    <h2 class="anim" data-delay="800">See It <span class="accent">In Action</span></h2>
+    <p class="subtitle anim" data-delay="1600">From markdown docs to tailored Lightspeed answers in minutes.</p>
+    <ul class="cta-list" id="s9-list">
+      <li data-delay="2800"><span class="cta-num">01</span><span>Prepare internal docs as markdown files in a directory</span></li>
+      <li data-delay="3600"><span class="cta-num">02</span><span>Run the RAG tool container to build the knowledge image</span></li>
+      <li data-delay="4400"><span class="cta-num">03</span><span>Push the image and update the OLSConfig CR</span></li>
+      <li data-delay="5200"><span class="cta-num">04</span><span>Ask Lightspeed a question &mdash; see your context in the answer</span></li>
+    </ul>
+    <div style="margin-top: 32px;" class="anim" data-delay="6200">
+      <span class="tag accent">Live Demo</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- SCENE 10: THANK YOU -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="scene" id="s10" data-duration="8000" data-narration="Thank you for watching. To learn more, visit the OpenShift Lightspeed documentation or check out the lightspeed-rag-content repository on GitHub.">
+    <div class="thank-you-center">
+      <h1 class="anim" data-delay="800" style="font-size: 4rem;">Thank <span class="accent pulse-glow">You</span></h1>
+      <p class="anim" data-delay="1600" style="color: var(--text-muted); font-size: 1.1rem; margin-top: 16px;">Red Hat OpenShift Lightspeed</p>
+      <p class="anim" data-delay="2400" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 8px; font-family: var(--font-mono);">Bring Your Own Knowledge</p>
+      <div class="logo-footer anim" data-delay="3200">
+        <svg class="rh-logo large" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 613 145" role="img" aria-label="Red Hat">
+          <path d="M127.47,83.49c12.51,0,30.61-2.58,30.61-17.46a14,14,0,0,0-.31-3.42l-7.45-32.36c-1.72-7.12-3.23-10.35-15.73-16.6C124.89,8.69,103.76.5,97.51.5,91.69.5,90,8,83.06,8c-6.68,0-11.64-5.6-17.89-5.6-6,0-9.91,4.09-12.93,12.5,0,0-8.41,23.72-9.49,27.16A6.43,6.43,0,0,0,42.53,44c0,9.22,36.3,39.45,84.94,39.45M160,72.07c1.73,8.19,1.73,9.05,1.73,10.13,0,14-15.74,21.77-36.43,21.77C78.54,104,37.58,76.6,37.58,58.49a18.45,18.45,0,0,1,1.51-7.33C22.27,52,.5,55,.5,74.22c0,31.48,74.59,70.28,133.65,70.28,45.28,0,56.7-20.48,56.7-36.65,0-12.72-11-27.16-30.83-35.78" fill="#e00"/>
+          <path d="M160,72.07c1.73,8.19,1.73,9.05,1.73,10.13,0,14-15.74,21.77-36.43,21.77C78.54,104,37.58,76.6,37.58,58.49a18.45,18.45,0,0,1,1.51-7.33l3.66-9.06A6.43,6.43,0,0,0,42.53,44c0,9.22,36.3,39.45,84.94,39.45,12.51,0,30.61-2.58,30.61-17.46a14,14,0,0,0-.31-3.42Z"/>
+          <path d="M579.74,92.8c0,11.89,7.15,17.67,20.19,17.67a52.11,52.11,0,0,0,11.89-1.68V95a24.84,24.84,0,0,1-7.68,1.16c-5.37,0-7.36-1.68-7.36-6.73V68.3h15.56V54.1H596.78v-18l-17,3.68V54.1H568.49V68.3h11.25Zm-53,.32c0-3.68,3.69-5.47,9.26-5.47a43.12,43.12,0,0,1,10.1,1.26v7.15a21.51,21.51,0,0,1-10.63,2.63c-5.46,0-8.73-2.1-8.73-5.57m5.2,17.56c6,0,10.84-1.26,15.36-4.31v3.37h16.82V74.08c0-13.56-9.14-21-24.39-21-8.52,0-16.94,2-26,6.1l6.1,12.52c6.52-2.74,12-4.42,16.83-4.42,7,0,10.62,2.73,10.62,8.31v2.73a49.53,49.53,0,0,0-12.62-1.58c-14.31,0-22.93,6-22.93,16.73,0,9.78,7.78,17.24,20.19,17.24m-92.44-.94h18.09V80.92h30.29v28.82H506V36.12H487.93V64.41H457.64V36.12H439.55ZM370.62,81.87c0-8,6.31-14.1,14.62-14.1A17.22,17.22,0,0,1,397,72.09V91.54A16.36,16.36,0,0,1,385.24,96c-8.2,0-14.62-6.1-14.62-14.09m26.61,27.87h16.83V32.44l-17,3.68V57.05a28.3,28.3,0,0,0-14.2-3.68c-16.19,0-28.92,12.51-28.92,28.5a28.25,28.25,0,0,0,28.4,28.6,25.12,25.12,0,0,0,14.93-4.83ZM320,67c5.36,0,9.88,3.47,11.67,8.83H308.47C310.15,70.3,314.36,67,320,67M291.33,82c0,16.2,13.25,28.82,30.28,28.82,9.36,0,16.2-2.53,23.25-8.42l-11.26-10c-2.63,2.74-6.52,4.21-11.14,4.21a14.39,14.39,0,0,1-13.68-8.83h39.65V83.55c0-17.67-11.88-30.39-28.08-30.39a28.57,28.57,0,0,0-29,28.81M262,51.58c6,0,9.36,3.78,9.36,8.31S268,68.2,262,68.2H244.11V51.58Zm-36,58.16h18.09V82.92h13.77l13.89,26.82H292l-16.2-29.45a22.27,22.27,0,0,0,13.88-20.72c0-13.25-10.41-23.45-26-23.45H226Z" fill="#fff"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- NARRATION BAR -->
+  <div class="narration-bar" id="narration"></div>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls" id="controls">
+    <button class="ctrl-btn" id="btnRestart" title="Restart (R)">Restart</button>
+    <button class="ctrl-btn active" id="btnPlayPause" title="Play/Pause (Space)">Pause</button>
+    <button class="ctrl-btn" id="btnPrev" title="Previous scene">&larr;</button>
+    <button class="ctrl-btn" id="btnNext" title="Next scene">&rarr;</button>
+    <div class="time-display" id="timeDisplay">0:00</div>
+  </div>
+
+  <script>
+    (function() {
+      const scenes = Array.from(document.querySelectorAll('.scene'));
+      const narrationEl = document.getElementById('narration');
+      const progressFill = document.getElementById('progressFill');
+      const timeDisplay = document.getElementById('timeDisplay');
+      const countdownEl = document.getElementById('countdown');
+      const countNumEl = document.getElementById('countNum');
+      const pauseOverlay = document.getElementById('pauseOverlay');
+      const btnPlayPause = document.getElementById('btnPlayPause');
+      const btnRestart = document.getElementById('btnRestart');
+      const btnPrev = document.getElementById('btnPrev');
+      const btnNext = document.getElementById('btnNext');
+
+      let currentScene = -1;
+      let playing = false;
+      let sceneTimer = null;
+      let sceneStartTime = 0;
+      let sceneElapsed = 0;
+      let scenePausedAt = 0;
+      let elementTimers = [];
+      let progressRAF = null;
+      let totalDuration = 0;
+
+      // Calculate total duration
+      scenes.forEach(s => { totalDuration += parseInt(s.dataset.duration) || 8000; });
+
+      function getElapsedBefore(idx) {
+        let t = 0;
+        for (let i = 0; i < idx; i++) t += parseInt(scenes[i].dataset.duration) || 8000;
+        return t;
+      }
+
+      function formatTime(ms) {
+        const s = Math.floor(ms / 1000);
+        const m = Math.floor(s / 60);
+        return m + ':' + String(s % 60).padStart(2, '0');
+      }
+
+      function clearTimers() {
+        clearTimeout(sceneTimer);
+        elementTimers.forEach(t => clearTimeout(t));
+        elementTimers = [];
+        cancelAnimationFrame(progressRAF);
+      }
+
+      function updateProgress() {
+        if (!playing) return;
+        const now = Date.now();
+        const elapsed = getElapsedBefore(currentScene) + (now - sceneStartTime);
+        const pct = Math.min((elapsed / totalDuration) * 100, 100);
+        progressFill.style.width = pct + '%';
+        timeDisplay.textContent = formatTime(elapsed);
+        progressRAF = requestAnimationFrame(updateProgress);
+      }
+
+      function showScene(idx) {
+        clearTimers();
+
+        // Fade out current
+        if (currentScene >= 0 && currentScene < scenes.length) {
+          const prev = scenes[currentScene];
+          prev.classList.remove('fade-in');
+          prev.classList.add('fade-out');
+          setTimeout(() => {
+            prev.classList.remove('active', 'fade-out');
+            // Reset element animations
+            prev.querySelectorAll('.show').forEach(el => el.classList.remove('show'));
+          }, 800);
+        }
+
+        currentScene = idx;
+        if (idx >= scenes.length) {
+          // End
+          playing = false;
+          document.body.classList.add('paused');
+          btnPlayPause.textContent = 'Replay';
+          progressFill.style.width = '100%';
+          timeDisplay.textContent = formatTime(totalDuration);
+          narrationEl.classList.remove('visible');
+          return;
+        }
+
+        const scene = scenes[idx];
+        const duration = parseInt(scene.dataset.duration) || 8000;
+        const narrationText = scene.dataset.narration || '';
+
+        // Show scene
+        setTimeout(() => {
+          scene.classList.add('active', 'fade-in');
+          scene.classList.remove('fade-out');
+
+          // Narration
+          if (narrationText) {
+            narrationEl.textContent = narrationText;
+            narrationEl.classList.add('visible');
+          } else {
+            narrationEl.classList.remove('visible');
+          }
+
+          // Animate elements with delays
+          const anims = scene.querySelectorAll('[data-delay]');
+          anims.forEach(el => {
+            const delay = parseInt(el.dataset.delay) || 0;
+            const t = setTimeout(() => {
+              if (currentScene === idx) el.classList.add('show');
+            }, delay);
+            elementTimers.push(t);
+          });
+
+          // Auto-advance
+          if (playing) {
+            sceneStartTime = Date.now();
+            sceneTimer = setTimeout(() => {
+              showScene(idx + 1);
+            }, duration);
+            updateProgress();
+          } else {
+            // Update progress statically
+            const elapsed = getElapsedBefore(idx);
+            progressFill.style.width = ((elapsed / totalDuration) * 100) + '%';
+            timeDisplay.textContent = formatTime(elapsed);
+          }
+        }, currentScene === 0 && idx === 0 ? 0 : 300);
+      }
+
+      function play() {
+        playing = true;
+        document.body.classList.remove('paused');
+        pauseOverlay.classList.remove('visible');
+        btnPlayPause.textContent = 'Pause';
+        btnPlayPause.classList.add('active');
+
+        if (currentScene >= scenes.length) {
+          // Replay
+          showScene(0);
+          return;
+        }
+
+        // Resume current scene
+        const scene = scenes[currentScene];
+        const duration = parseInt(scene.dataset.duration) || 8000;
+        const remaining = duration - scenePausedAt;
+
+        sceneStartTime = Date.now() - scenePausedAt;
+        sceneTimer = setTimeout(() => {
+          showScene(currentScene + 1);
+        }, remaining);
+        updateProgress();
+      }
+
+      function pause() {
+        playing = false;
+        document.body.classList.add('paused');
+        pauseOverlay.classList.add('visible');
+        btnPlayPause.textContent = 'Play';
+        btnPlayPause.classList.remove('active');
+
+        clearTimeout(sceneTimer);
+        cancelAnimationFrame(progressRAF);
+
+        scenePausedAt = Date.now() - sceneStartTime;
+      }
+
+      function togglePlayPause() {
+        if (playing) pause();
+        else play();
+      }
+
+      // Countdown then start
+      function startCountdown() {
+        let count = 3;
+        countNumEl.textContent = count;
+        const ci = setInterval(() => {
+          count--;
+          if (count > 0) {
+            countNumEl.textContent = count;
+          } else {
+            clearInterval(ci);
+            countdownEl.classList.add('hidden');
+            setTimeout(() => { countdownEl.style.display = 'none'; }, 600);
+            playing = true;
+            scenePausedAt = 0;
+            showScene(0);
+          }
+        }, 800);
+      }
+
+      // Controls
+      btnPlayPause.addEventListener('click', (e) => { e.stopPropagation(); togglePlayPause(); });
+      btnRestart.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearTimers();
+        // Reset all scenes
+        scenes.forEach(s => {
+          s.classList.remove('active', 'fade-in', 'fade-out');
+          s.querySelectorAll('.show').forEach(el => el.classList.remove('show'));
+        });
+        currentScene = -1;
+        scenePausedAt = 0;
+        playing = true;
+        document.body.classList.remove('paused');
+        pauseOverlay.classList.remove('visible');
+        btnPlayPause.textContent = 'Pause';
+        btnPlayPause.classList.add('active');
+        showScene(0);
+      });
+      btnPrev.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (currentScene > 0) {
+          scenePausedAt = 0;
+          showScene(currentScene - 1);
+        }
+      });
+      btnNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (currentScene < scenes.length - 1) {
+          scenePausedAt = 0;
+          showScene(currentScene + 1);
+        }
+      });
+
+      // Keyboard
+      document.addEventListener('keydown', (e) => {
+        if (e.key === ' ') { e.preventDefault(); togglePlayPause(); }
+        if (e.key === 'r' || e.key === 'R') { btnRestart.click(); }
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          scenePausedAt = 0;
+          if (currentScene < scenes.length - 1) showScene(currentScene + 1);
+        }
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          scenePausedAt = 0;
+          if (currentScene > 0) showScene(currentScene - 1);
+        }
+      });
+
+      // Click pause/play (not on controls)
+      document.addEventListener('click', (e) => {
+        if (e.target.closest('.controls') || e.target.closest('#countdown')) return;
+        if (currentScene < 0) return;
+        togglePlayPause();
+      });
+
+      startCountdown();
+    })();
+  </script>
+</body>
+</html>
