@@ -26,7 +26,7 @@
 * Run `sync-to-remote.sh` to copy .md files, scripts, and demo.env to the remote server
 
 ### Authenticate on the Remote Host
-* Run `remote-login.sh` to log in to OpenShift (as kubeadmin), registry.redhat.io, and the internal OpenShift registry
+* Run `remote-login.sh` — prompts for OpenShift and Red Hat registry usernames/passwords, then logs in to the cluster, registry.redhat.io, and the internal OpenShift registry on the remote host
 
 ### Build the new container image
 * execute podman script

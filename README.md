@@ -102,16 +102,22 @@ This copies all `.md` files from `BowlandWidgetFactoryOCPStandards/`, the bash-c
 
 ### 5. Authenticate on the Remote Host
 
-Log in to the OpenShift cluster and container registries on the remote RHEL 9 server. This prompts interactively for credentials — no secrets are stored in files:
+Log in to the OpenShift cluster and container registries on the remote RHEL 9 server. The script prompts locally for two sets of credentials before connecting:
 
 ```bash
 ./remote-login.sh
 ```
 
-This runs three logins in a single SSH session:
-1. `oc login` to the OpenShift cluster as `kubeadmin`
-2. `podman login` to `registry.redhat.io` (Red Hat registry credentials)
-3. `podman login` to the OpenShift internal registry (using the `oc` token)
+You will be prompted for:
+- **OpenShift cluster** username and password (e.g., `kubeadmin`)
+- **Red Hat registry** (`registry.redhat.io`) username and password
+
+The script then runs three logins in a single SSH session:
+1. `oc login` to the OpenShift cluster with the provided credentials
+2. `podman login` to `registry.redhat.io` with the provided credentials
+3. `podman login` to the OpenShift internal registry (using the `oc` token from step 1)
+
+No credentials are stored in files — passwords are entered interactively and not echoed to the terminal.
 
 ## Running the Demo
 
