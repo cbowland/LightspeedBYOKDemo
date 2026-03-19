@@ -12,29 +12,35 @@ The demo uses a fictional **Bowland Widget Factory** and its OpenShift platform 
 
 ```
 .
-├── BowlandWidgetFactoryOCPStandards/   # Sample Markdown knowledge base
+├── BowlandWidgetFactoryOCPStandards/       # Sample Markdown knowledge base
 │   ├── bowland-configmap-secret-standards.md
 │   ├── bowland-deployment-standards.md
 │   ├── bowland-global-metadata-standards.md
 │   ├── bowland-network-policy-standards.md
 │   ├── bowland-observability-promql-standards.md
 │   └── bowland-service-route-standards.md
-├── demo.env.example          # Environment variable template for scripts
-├── sync-to-remote.sh         # Syncs Markdown files to a remote RHEL 9 server
-├── patch-olsconfig-rag.sh    # Adds RAG config to the OLSConfig resource
-├── unpatch-olsconfig-rag.sh  # Removes RAG config from the OLSConfig resource
-├── DemoSteps.md              # Detailed step-by-step demo walkthrough
-├── podman-commands.md         # Podman commands reference for the RAG tool
-├── olsconfig-rag-snippet.md   # YAML snippet for manual OLSConfig editing
-├── openshift-lightspeed-byok.html  # HTML slide deck for the presentation
-└── build_deck.py             # Generates a .pptx version of the slide deck
+├── demo.env.example                        # Environment variable template
+├── sync-to-remote.sh                       # Syncs .md files & scripts to a remote RHEL 9 server
+├── remote-dnf.sh                           # Installs podman & tree on the remote RHEL 9 server
+├── patch-olsconfig-rag.sh                  # Adds RAG config to OLSConfig (zsh)
+├── patch-olsconfig-rag-bash.sh             # Adds RAG config to OLSConfig (bash, for remote use)
+├── unpatch-olsconfig-rag.sh                # Removes RAG config from OLSConfig
+├── openshift-lightspeed-route.yaml         # Route manifest to expose the Lightspeed API
+├── DemoSteps.md                            # Step-by-step demo walkthrough
+├── podman-commands.md                      # Podman commands reference
+├── podman-command.txt                      # Quick-reference podman run command
+├── olsconfig-rag-snippet.md                # YAML snippet for manual OLSConfig editing
+├── olsconfig-rag-snippet.txt               # Plain-text version of the RAG snippet
+├── openshift-lightspeed-byok.html          # HTML slide deck for the presentation
+├── docs/openshift-lightspeed-byok-video.html  # Video-embedded version of the deck
+└── build_deck.py                           # Generates a .pptx version of the slide deck
 ```
 
 ## Prerequisites
 
 - **RHEL 9 server** — used to run the RAG tool container (provision via [Red Hat Demo Platform](https://catalog.demo.redhat.com))
 - **OpenShift cluster with Lightspeed installed** — provision via [Red Hat Demo Platform](https://catalog.demo.redhat.com)
-- **Podman** — installed on the RHEL 9 server
+- **Podman** — installed on the RHEL 9 server (use `remote-dnf.sh` to install)
 - **oc CLI** — authenticated to your OpenShift cluster
 - **Red Hat registry credentials** — to pull the RAG tool image from `registry.redhat.io`
 - **SSH access** — key-based authentication to the RHEL 9 server
@@ -55,24 +61,35 @@ Edit `demo.env` with your specific settings:
 |---|---|
 | `REMOTE_USER` | SSH username for the RHEL 9 server |
 | `REMOTE_HOST` | Hostname of the RHEL 9 server |
+| `LOCAL_SOURCE_NAME` | Local directory containing the Markdown knowledge base (default: `BowlandWidgetFactoryOCPStandards`) |
+| `REMOTE_SOURCE_NAME` | Remote directory to receive the Markdown files and scripts (default: `LightspeedBYOKDemo`) |
+| `REMOTE_SOURCE_TARGET` | Remote directory for RAG tool output (default: `LightspeedBYOKOutput`) |
 | `OCP_REGISTRY_URL` | OpenShift internal image registry route |
 | `OLS_NAMESPACE` | Namespace where Lightspeed is installed (typically `openshift-lightspeed`) |
 | `RAG_INDEX_ID` | Vector DB index identifier (default: `vector_db_index`) |
 | `RAG_INDEX_PATH` | Path to the vector DB inside the container (default: `/rag/vector_db`) |
-| `MARKDOWN_SOURCE_DIR` | Path on the remote server where Markdown files are stored |
-| `OUTPUT_DIR` | Path on the remote server for RAG tool output |
+| `MARKDOWN_SOURCE_DIR` | Absolute path on the remote server to the Markdown files |
+| `OUTPUT_DIR` | Absolute path on the remote server for RAG tool output |
 
-### 2. Sync Knowledge Files to the RHEL 9 Server
+### 2. Install Prerequisites on the RHEL 9 Server
+
+Run the remote dnf script to install `podman` and `tree` on the RHEL 9 server:
+
+```bash
+./remote-dnf.sh
+```
+
+### 3. Sync Knowledge Files to the RHEL 9 Server
 
 ```bash
 ./sync-to-remote.sh
 ```
 
-This copies all `.md` files from `BowlandWidgetFactoryOCPStandards/` to the remote server and creates the output directory.
+This copies all `.md` files from `BowlandWidgetFactoryOCPStandards/` and the bash-compatible patch script (`patch-olsconfig-rag-bash.sh`) to the remote server. It also creates the required remote directories if they don't already exist.
 
 ## Running the Demo
 
-### 3. Build the RAG Image on the RHEL 9 Server
+### 4. Build the RAG Image on the RHEL 9 Server
 
 SSH into the RHEL 9 server and authenticate to the Red Hat registry:
 
@@ -90,7 +107,7 @@ podman run -it --rm --device=/dev/fuse \
   registry.redhat.io/openshift-lightspeed-tech-preview/lightspeed-rag-tool-rhel9:latest
 ```
 
-### 4. Push the Image to the OpenShift Registry
+### 5. Push the Image to the OpenShift Registry
 
 Still on the RHEL 9 server, load and push the resulting image:
 
@@ -109,7 +126,7 @@ podman push <OCP_REGISTRY_URL>/<OLS_NAMESPACE>/byok-image:latest
 
 Alternatively, you can push to an external registry like Quay.io and make the image public.
 
-### 5. Configure OpenShift Lightspeed
+### 6. Configure OpenShift Lightspeed
 
 From your local machine (with `oc` authenticated to the cluster), patch the OLSConfig to point Lightspeed at your RAG index:
 
@@ -132,7 +149,9 @@ To target a differently named OLSConfig resource:
 ./patch-olsconfig-rag.sh <olsconfig-name>
 ```
 
-### 6. Test It
+> **Note:** A bash-compatible version (`patch-olsconfig-rag-bash.sh`) is also available for running directly on the remote RHEL 9 server where zsh may not be installed. It is automatically synced to the remote host by `sync-to-remote.sh`.
+
+### 7. Test It
 
 Open the OpenShift Console and use the Lightspeed chat interface. Try asking:
 
@@ -152,7 +171,7 @@ To remove the RAG configuration from Lightspeed and revert to default behavior:
 
 ## Presentation Materials
 
-An HTML slide deck is included at `openshift-lightspeed-byok.html` — open it in a browser to present. A Python script (`build_deck.py`) can generate a `.pptx` version if you have a Red Hat PowerPoint template (`redhat_template.pptx`) and the `python-pptx` package installed.
+An HTML slide deck is included at `openshift-lightspeed-byok.html` — open it in a browser to present. A video-embedded version is available at `docs/openshift-lightspeed-byok-video.html`. A Python script (`build_deck.py`) can generate a `.pptx` version if you have a Red Hat PowerPoint template (`redhat_template.pptx`) and the `python-pptx` package installed.
 
 ## Additional Documentation
 
@@ -161,3 +180,4 @@ An HTML slide deck is included at `openshift-lightspeed-byok.html` — open it i
 - [olsconfig-rag-snippet.md](olsconfig-rag-snippet.md) — YAML snippet for manual OLSConfig editing
 - [sync-to-remote.md](sync-to-remote.md) — Details on the sync script
 - [patch-olsconfig-rag.md](patch-olsconfig-rag.md) — Details on the patch script
+- [unpatch-olsconfig-rag.md](unpatch-olsconfig-rag.md) — Details on the unpatch script

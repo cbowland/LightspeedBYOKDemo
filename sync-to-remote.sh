@@ -1,4 +1,11 @@
 #!/bin/zsh
+#
+# Syncs local RAG source documents and supporting scripts to a remote host via
+# SCP. Copies all Markdown (.md) files from the local source directory and the
+# bash-compatible OLSConfig patch script to the remote host. Also ensures the
+# required remote directories exist before transferring files. Configuration
+# values (remote host, user, directory names) are sourced from demo.env.
+#
 
 # Resolve the script's directory so paths are relative to it
 SCRIPT_DIR="${0:a:h}"
@@ -33,6 +40,15 @@ scp "${LOCAL_SOURCE_PATH}"/*.md "${REMOTE_USER}@${REMOTE_HOST}:~/${REMOTE_SOURCE
 
 if [[ $? -ne 0 ]]; then
   echo "Error: Failed to copy files."
+  exit 1
+fi
+
+# Copy the bash patch script to the remote source directory
+echo "Copying patch-olsconfig-rag-bash.sh to ${REMOTE_USER}@${REMOTE_HOST}:~/${REMOTE_SOURCE_NAME}/"
+scp "${SCRIPT_DIR}/patch-olsconfig-rag-bash.sh" "${REMOTE_USER}@${REMOTE_HOST}:~/${REMOTE_SOURCE_NAME}/"
+
+if [[ $? -ne 0 ]]; then
+  echo "Error: Failed to copy patch-olsconfig-rag-bash.sh."
   exit 1
 fi
 
