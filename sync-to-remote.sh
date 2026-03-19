@@ -2,9 +2,10 @@
 #
 # Syncs local RAG source documents and supporting scripts to a remote host via
 # SCP. Copies all Markdown (.md) files from the local source directory and the
-# bash-compatible OLSConfig patch script to the remote host. Also ensures the
-# required remote directories exist before transferring files. Configuration
-# values (remote host, user, directory names) are sourced from demo.env.
+# bash-compatible OLSConfig patch and unpatch scripts to the remote host. Also
+# ensures the required remote directories exist before transferring files.
+# Configuration values (remote host, user, directory names) are sourced from
+# demo.env.
 #
 
 # Resolve the script's directory so paths are relative to it
@@ -43,13 +44,16 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-# Copy the bash patch script to the remote source directory
-echo "Copying patch-olsconfig-rag-bash.sh to ${REMOTE_USER}@${REMOTE_HOST}:~/${REMOTE_SOURCE_NAME}/"
-scp "${SCRIPT_DIR}/patch-olsconfig-rag-bash.sh" "${REMOTE_USER}@${REMOTE_HOST}:~/${REMOTE_SOURCE_NAME}/"
+# Copy the bash-compatible OLSConfig scripts to the remote source directory
+BASH_SCRIPTS=("patch-olsconfig-rag-bash.sh" "unpatch-olsconfig-rag-bash.sh")
+for script in "${BASH_SCRIPTS[@]}"; do
+  echo "Copying ${script} to ${REMOTE_USER}@${REMOTE_HOST}:~/${REMOTE_SOURCE_NAME}/"
+  scp "${SCRIPT_DIR}/${script}" "${REMOTE_USER}@${REMOTE_HOST}:~/${REMOTE_SOURCE_NAME}/"
 
-if [[ $? -ne 0 ]]; then
-  echo "Error: Failed to copy patch-olsconfig-rag-bash.sh."
-  exit 1
-fi
+  if [[ $? -ne 0 ]]; then
+    echo "Error: Failed to copy ${script}."
+    exit 1
+  fi
+done
 
 echo "Done."

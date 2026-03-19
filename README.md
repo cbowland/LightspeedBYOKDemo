@@ -24,7 +24,8 @@ The demo uses a fictional **Bowland Widget Factory** and its OpenShift platform 
 ├── remote-dnf.sh                           # Installs podman & tree on the remote RHEL 9 server
 ├── patch-olsconfig-rag.sh                  # Adds RAG config to OLSConfig (zsh)
 ├── patch-olsconfig-rag-bash.sh             # Adds RAG config to OLSConfig (bash, for remote use)
-├── unpatch-olsconfig-rag.sh                # Removes RAG config from OLSConfig
+├── unpatch-olsconfig-rag.sh                # Removes RAG config from OLSConfig (zsh)
+├── unpatch-olsconfig-rag-bash.sh           # Removes RAG config from OLSConfig (bash, for remote use)
 ├── openshift-lightspeed-route.yaml         # Route manifest to expose the Lightspeed API
 ├── DemoSteps.md                            # Step-by-step demo walkthrough
 ├── podman-commands.md                      # Podman commands reference
@@ -85,7 +86,7 @@ Run the remote dnf script to install `podman` and `tree` on the RHEL 9 server:
 ./sync-to-remote.sh
 ```
 
-This copies all `.md` files from `BowlandWidgetFactoryOCPStandards/` and the bash-compatible patch script (`patch-olsconfig-rag-bash.sh`) to the remote server. It also creates the required remote directories if they don't already exist.
+This copies all `.md` files from `BowlandWidgetFactoryOCPStandards/` and the bash-compatible OLSConfig scripts (`patch-olsconfig-rag-bash.sh` and `unpatch-olsconfig-rag-bash.sh`) to the remote server. It also creates the required remote directories if they don't already exist.
 
 ## Running the Demo
 
@@ -149,7 +150,7 @@ To target a differently named OLSConfig resource:
 ./patch-olsconfig-rag.sh <olsconfig-name>
 ```
 
-> **Note:** A bash-compatible version (`patch-olsconfig-rag-bash.sh`) is also available for running directly on the remote RHEL 9 server where zsh may not be installed. It is automatically synced to the remote host by `sync-to-remote.sh`.
+> **Note:** Bash-compatible versions of both scripts (`patch-olsconfig-rag-bash.sh` and `unpatch-olsconfig-rag-bash.sh`) are available for running directly on the remote RHEL 9 server where zsh may not be installed. They are automatically synced to the remote host by `sync-to-remote.sh`.
 
 ### 7. Test It
 
