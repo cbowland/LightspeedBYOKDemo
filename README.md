@@ -21,7 +21,7 @@ The demo uses a fictional **Bowland Widget Factory** and its OpenShift platform 
 │   └── bowland-service-route-standards.md
 ├── demo.env.example                        # Environment variable template
 ├── sync-to-remote.sh                       # Syncs .md files & scripts to a remote RHEL 9 server
-├── remote-dnf.sh                           # Installs podman & tree on the remote RHEL 9 server
+├── remote-setup.sh                           # Installs podman & tree and downloads oc CLI on the remote RHEL 9 server
 ├── patch-olsconfig-rag.sh                  # Adds RAG config to OLSConfig (zsh)
 ├── patch-olsconfig-rag-bash.sh             # Adds RAG config to OLSConfig (bash, for remote use)
 ├── unpatch-olsconfig-rag.sh                # Removes RAG config from OLSConfig (zsh)
@@ -41,7 +41,7 @@ The demo uses a fictional **Bowland Widget Factory** and its OpenShift platform 
 
 - **RHEL 9 server** — used to run the RAG tool container (provision via [Red Hat Demo Platform](https://catalog.demo.redhat.com))
 - **OpenShift cluster with Lightspeed installed** — provision via [Red Hat Demo Platform](https://catalog.demo.redhat.com)
-- **Podman** — installed on the RHEL 9 server (use `remote-dnf.sh` to install)
+- **Podman** — installed on the RHEL 9 server (use `remote-setup.sh` to install)
 - **oc CLI** — authenticated to your OpenShift cluster
 - **Red Hat registry credentials** — to pull the RAG tool image from `registry.redhat.io`
 - **SSH access** — key-based authentication to the RHEL 9 server
@@ -66,6 +66,7 @@ Edit `demo.env` with your specific settings:
 | `REMOTE_SOURCE_NAME` | Remote directory to receive the Markdown files and scripts (default: `LightspeedBYOKDemo`) |
 | `REMOTE_SOURCE_TARGET` | Remote directory for RAG tool output (default: `LightspeedBYOKOutput`) |
 | `OCP_REGISTRY_URL` | OpenShift internal image registry route |
+| `OC_TAR_URL` | URL to download the `oc` CLI tar from the OpenShift cluster |
 | `OLS_NAMESPACE` | Namespace where Lightspeed is installed (typically `openshift-lightspeed`) |
 | `RAG_INDEX_ID` | Vector DB index identifier (default: `vector_db_index`) |
 | `RAG_INDEX_PATH` | Path to the vector DB inside the container (default: `/rag/vector_db`) |
@@ -74,10 +75,10 @@ Edit `demo.env` with your specific settings:
 
 ### 2. Install Prerequisites on the RHEL 9 Server
 
-Run the remote dnf script to install `podman` and `tree` on the RHEL 9 server:
+Run the remote dnf script to install `podman` and `tree` on the RHEL 9 server. If `OC_TAR_URL` is set in `demo.env`, it also downloads and extracts the `oc` CLI into the user's home directory:
 
 ```bash
-./remote-dnf.sh
+./remote-setup.sh
 ```
 
 ### 3. Sync Knowledge Files to the RHEL 9 Server
@@ -86,7 +87,7 @@ Run the remote dnf script to install `podman` and `tree` on the RHEL 9 server:
 ./sync-to-remote.sh
 ```
 
-This copies all `.md` files from `BowlandWidgetFactoryOCPStandards/` and the bash-compatible OLSConfig scripts (`patch-olsconfig-rag-bash.sh` and `unpatch-olsconfig-rag-bash.sh`) to the remote server. It also creates the required remote directories if they don't already exist.
+This copies all `.md` files from `BowlandWidgetFactoryOCPStandards/`, the bash-compatible OLSConfig scripts (`patch-olsconfig-rag-bash.sh` and `unpatch-olsconfig-rag-bash.sh`), and `demo.env` (if it exists) to the remote server. It also creates the required remote directories if they don't already exist.
 
 ## Running the Demo
 

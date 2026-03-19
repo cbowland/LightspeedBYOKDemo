@@ -3,9 +3,9 @@
 # Syncs local RAG source documents and supporting scripts to a remote host via
 # SCP. Copies all Markdown (.md) files from the local source directory and the
 # bash-compatible OLSConfig patch and unpatch scripts to the remote host. Also
-# ensures the required remote directories exist before transferring files.
-# Configuration values (remote host, user, directory names) are sourced from
-# demo.env.
+# copies demo.env if it exists, and ensures the required remote directories
+# exist before transferring files. Configuration values (remote host, user,
+# directory names) are sourced from demo.env.
 #
 
 # Resolve the script's directory so paths are relative to it
@@ -55,5 +55,16 @@ for script in "${BASH_SCRIPTS[@]}"; do
     exit 1
   fi
 done
+
+# Copy demo.env to the remote source directory if it exists
+if [[ -f "${SCRIPT_DIR}/demo.env" ]]; then
+  echo "Copying demo.env to ${REMOTE_USER}@${REMOTE_HOST}:~/${REMOTE_SOURCE_NAME}/"
+  scp "${SCRIPT_DIR}/demo.env" "${REMOTE_USER}@${REMOTE_HOST}:~/${REMOTE_SOURCE_NAME}/"
+
+  if [[ $? -ne 0 ]]; then
+    echo "Error: Failed to copy demo.env."
+    exit 1
+  fi
+fi
 
 echo "Done."

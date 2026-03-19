@@ -9,6 +9,7 @@
 | `<EXTERNAL_REGISTRY>` | External registry (e.g. Quay) | `quay.io` |
 | `<REGISTRY_USER>` | Your registry username | `cbowland` |
 | `<OUTPUT_DIR>` | Directory for RAG tool output | `/home/lab-user/LightspeedBYOKOutput` |
+| `<OC_TAR_URL>` | URL to download the `oc` CLI tar | `https://downloads-openshift-console.apps.cluster-XXXXX.dynamic.redhatworkshops.io/amd64/linux/oc.tar` |
 
 ### Provision Demo Instances
 * RHEL 9
@@ -17,11 +18,8 @@
 ** https://catalog.demo.redhat.com/catalog?search=lightspeed&item=babylon-catalog-prod%2Fpublished.ocp4-lightspeed.prod
 
 ### Set Up RHEL 9 Server
-* ssh into box
-* create BYOK-output directory
-* create Lightspeed-BYOK directory
-* scp all needed .md files to the Lightspeed-BYOK directory
-* scp podman script to the home directory of the user
+* Run `remote-setup.sh` to install prerequisites (podman, tree) and download the oc CLI
+* Run `sync-to-remote.sh` to copy .md files, scripts, and demo.env to the remote server
 
 ### Build the new container image
 * use podman to log in to registry.redhat.io

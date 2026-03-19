@@ -1,6 +1,6 @@
 # sync-to-remote.sh
 
-A zsh script that syncs `.md` files from a local directory to a remote server over SSH.
+A zsh script that syncs `.md` files, bash-compatible OLSConfig scripts, and `demo.env` from a local directory to a remote server over SSH.
 
 ## Prerequisites
 
@@ -25,6 +25,7 @@ The following variables are defined at the top of the script:
 2. Validates that the local source directory exists and contains `.md` files.
 3. Connects to `your-username@your-server.example.com` via SSH and creates the remote source and target directories under `~/` if they don't already exist.
 4. Copies all `.md` files from the local source directory to the remote source directory using `scp`.
+5. Copies `demo.env` to the remote source directory if it exists locally.
 
 ## Usage
 
