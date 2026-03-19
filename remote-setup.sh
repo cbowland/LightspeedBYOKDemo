@@ -4,8 +4,8 @@
 # remote host defined in demo.env and uses dnf to install podman (for building
 # container images) and tree (for inspecting directory structures). Also
 # downloads and extracts the oc CLI tar from the URL specified by OC_TAR_URL in
-# demo.env into the user's home directory. Intended to be run once during
-# initial environment setup.
+# demo.env into the user's home directory and adds it to the user's PATH in
+# ~/.bashrc. Intended to be run once during initial environment setup.
 #
 
 SCRIPT_DIR="${0:a:h}"
@@ -22,10 +22,10 @@ fi
 # Download and extract the oc CLI tar on the remote host
 if [[ -n "${OC_TAR_URL}" ]]; then
   echo "Downloading and extracting oc CLI from ${OC_TAR_URL}..."
-  ssh -t "${REMOTE_USER}@${REMOTE_HOST}" "curl -kL '${OC_TAR_URL}' | tar xf - -C ~/"
+  ssh -t "${REMOTE_USER}@${REMOTE_HOST}" "curl -kL '${OC_TAR_URL}' | tar xf - -C ~/ && grep -qxF 'export PATH=\$HOME:\$PATH' ~/.bashrc || echo 'export PATH=\$HOME:\$PATH' >> ~/.bashrc"
 
   if [[ $? -ne 0 ]]; then
-    echo "Error: Failed to download or extract oc tar on remote host."
+    echo "Error: Failed to download/extract oc tar or update PATH on remote host."
     exit 1
   fi
 else
