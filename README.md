@@ -21,7 +21,9 @@ The demo uses a fictional **Bowland Widget Factory** and its OpenShift platform 
 │   └── bowland-service-route-standards.md
 ├── demo.env.example                        # Environment variable template
 ├── sync-to-remote.sh                       # Syncs .md files & scripts to a remote RHEL 9 server
-├── remote-setup.sh                           # Installs podman & tree and downloads oc CLI on the remote RHEL 9 server
+├── remote-setup.sh                         # Installs podman & tree and downloads oc CLI on the remote RHEL 9 server
+├── expose-registry.sh                      # Exposes the OpenShift internal registry and updates OCP_REGISTRY_URL in demo.env
+├── remote-login.sh                         # Authenticates to OpenShift and container registries on the remote host
 ├── patch-olsconfig-rag.sh                  # Adds RAG config to OLSConfig (zsh)
 ├── patch-olsconfig-rag-bash.sh             # Adds RAG config to OLSConfig (bash, for remote use)
 ├── unpatch-olsconfig-rag.sh                # Removes RAG config from OLSConfig (zsh)
@@ -65,7 +67,8 @@ Edit `demo.env` with your specific settings:
 | `LOCAL_SOURCE_NAME` | Local directory containing the Markdown knowledge base (default: `BowlandWidgetFactoryOCPStandards`) |
 | `REMOTE_SOURCE_NAME` | Remote directory to receive the Markdown files and scripts (default: `LightspeedBYOKDemo`) |
 | `REMOTE_SOURCE_TARGET` | Remote directory for RAG tool output (default: `LightspeedBYOKOutput`) |
-| `OCP_REGISTRY_URL` | OpenShift internal image registry route |
+| `OCP_REGISTRY_URL` | OpenShift internal image registry route (auto-populated by `expose-registry.sh`) |
+| `OCP_API_URL` | OpenShift API server URL (e.g., `https://api.cluster-XXXXX.dynamic.redhatworkshops.io:6443`) |
 | `OC_TAR_URL` | URL to download the `oc` CLI tar from the OpenShift cluster |
 | `OLS_NAMESPACE` | Namespace where Lightspeed is installed (typically `openshift-lightspeed`) |
 | `RAG_INDEX_ID` | Vector DB index identifier (default: `vector_db_index`) |
@@ -73,7 +76,15 @@ Edit `demo.env` with your specific settings:
 | `MARKDOWN_SOURCE_DIR` | Absolute path on the remote server to the Markdown files |
 | `OUTPUT_DIR` | Absolute path on the remote server for RAG tool output |
 
-### 2. Install Prerequisites on the RHEL 9 Server
+### 2. Expose the OpenShift Internal Registry
+
+With `oc` authenticated to the cluster, expose the internal container registry. This also updates `OCP_REGISTRY_URL` in `demo.env` with the registry route:
+
+```bash
+./expose-registry.sh
+```
+
+### 3. Install Prerequisites on the RHEL 9 Server
 
 Run the remote dnf script to install `podman` and `tree` on the RHEL 9 server. If `OC_TAR_URL` is set in `demo.env`, it also downloads and extracts the `oc` CLI into the user's home directory:
 
@@ -81,7 +92,7 @@ Run the remote dnf script to install `podman` and `tree` on the RHEL 9 server. I
 ./remote-setup.sh
 ```
 
-### 3. Sync Knowledge Files to the RHEL 9 Server
+### 4. Sync Knowledge Files to the RHEL 9 Server
 
 ```bash
 ./sync-to-remote.sh
@@ -89,17 +100,24 @@ Run the remote dnf script to install `podman` and `tree` on the RHEL 9 server. I
 
 This copies all `.md` files from `BowlandWidgetFactoryOCPStandards/`, the bash-compatible OLSConfig scripts (`patch-olsconfig-rag-bash.sh` and `unpatch-olsconfig-rag-bash.sh`), and `demo.env` (if it exists) to the remote server. It also creates the required remote directories if they don't already exist.
 
-## Running the Demo
+### 5. Authenticate on the Remote Host
 
-### 4. Build the RAG Image on the RHEL 9 Server
-
-SSH into the RHEL 9 server and authenticate to the Red Hat registry:
+Log in to the OpenShift cluster and container registries on the remote RHEL 9 server. This prompts interactively for credentials — no secrets are stored in files:
 
 ```bash
-podman login -u <REGISTRY_USERNAME> registry.redhat.io
+./remote-login.sh
 ```
 
-Run the RAG tool to process the Markdown files into a vector index and container image:
+This runs three logins in a single SSH session:
+1. `oc login` to the OpenShift cluster as `kubeadmin`
+2. `podman login` to `registry.redhat.io` (Red Hat registry credentials)
+3. `podman login` to the OpenShift internal registry (using the `oc` token)
+
+## Running the Demo
+
+### 6. Build the RAG Image on the RHEL 9 Server
+
+SSH into the RHEL 9 server and run the RAG tool to process the Markdown files into a vector index and container image:
 
 ```bash
 podman run -it --rm --device=/dev/fuse \
@@ -109,17 +127,13 @@ podman run -it --rm --device=/dev/fuse \
   registry.redhat.io/openshift-lightspeed-tech-preview/lightspeed-rag-tool-rhel9:latest
 ```
 
-### 5. Push the Image to the OpenShift Registry
+### 7. Push the Image to the OpenShift Registry
 
-Still on the RHEL 9 server, load and push the resulting image:
+Still on the RHEL 9 server, load and push the resulting image (registry logins were already handled by `remote-login.sh`):
 
 ```bash
 # Load the image from the RAG tool output
 podman load -i <OUTPUT_DIR>/byok-image.tar
-
-# Log in to the OpenShift internal registry
-oc login --token=<YOUR_TOKEN> --server=<YOUR_API_SERVER>
-podman login -u any_username -p $(oc whoami -t) <OCP_REGISTRY_URL>
 
 # Tag and push
 podman tag localhost/byok-image:latest <OCP_REGISTRY_URL>/<OLS_NAMESPACE>/byok-image:latest
@@ -128,7 +142,7 @@ podman push <OCP_REGISTRY_URL>/<OLS_NAMESPACE>/byok-image:latest
 
 Alternatively, you can push to an external registry like Quay.io and make the image public.
 
-### 6. Configure OpenShift Lightspeed
+### 8. Configure OpenShift Lightspeed
 
 From your local machine (with `oc` authenticated to the cluster), patch the OLSConfig to point Lightspeed at your RAG index:
 
@@ -153,7 +167,7 @@ To target a differently named OLSConfig resource:
 
 > **Note:** Bash-compatible versions of both scripts (`patch-olsconfig-rag-bash.sh` and `unpatch-olsconfig-rag-bash.sh`) are available for running directly on the remote RHEL 9 server where zsh may not be installed. They are automatically synced to the remote host by `sync-to-remote.sh`.
 
-### 7. Test It
+### 9. Test It
 
 Open the OpenShift Console and use the Lightspeed chat interface. Try asking:
 
